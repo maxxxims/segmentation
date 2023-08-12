@@ -9,6 +9,7 @@ class Image:
         if dim == 2:
             with IMG.open(path_to_image) as img:
                 img.load()
+                self.data_raw = np.array(img)
                 self.data = np.array(img)
                 #self.data = img
                 
@@ -20,6 +21,10 @@ class Image:
     def _open_png(path_to_image: str):
         ...
 
+
+    def set_image(self, new_data: np.array):
+        self.data = new_data
+        
 
     def get_image(self):
         return self.data
@@ -39,6 +44,6 @@ class Image:
         return self.data.shape
     
 
-    def get_dim(self):
+    def dim(self):
         return self.dim
     
