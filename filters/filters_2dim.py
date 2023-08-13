@@ -2,6 +2,7 @@ import numpy as np
 from PIL import Image as IMG
 from PIL import ImageFilter
 
+
 def test(data: np.array):
     x_size, y_size = data.shape
     data[x_size//4 : 3*x_size//4, y_size//4 : 3*y_size//4] = 255
