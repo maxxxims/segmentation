@@ -25,7 +25,7 @@ class Marker:
                 self.y3 = self.y4
 
     def draw(self, data: np.array, color: int = 255) -> None:
-        data[self.y1 : self.y4, self.x1 : self.x4] = 255
+        data[self.y1 : self.y4 + 1, self.x1 : self.x4 + 1] = 255
 
 
     def __str__(self):
@@ -67,8 +67,22 @@ class MarkerContainer:
 
     
 
-    def by_value(self, value: int) -> list[Marker]:
+    def with_value(self, value: int) -> list[Marker]:
         if value in self.value2marks.keys():
             return [self.markers[i] for i in self.value2marks[value]]
         else:
             return []
+        
+    
+    def __iter__(self):
+        self.index_iter = 0
+        return self
+    
+    def __next__(self):
+        i = self.index_iter
+        self.index_iter += 1
+        if i >= len(self.markers) or len(self.markers) == 0:
+            self.index_iter = 0
+            raise StopIteration
+        else:
+            return self.markers[i]

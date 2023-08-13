@@ -4,36 +4,56 @@ import numpy as np
 import matplotlib.pyplot as plt
 import filters.filters_2dim as filters_2d
 from segmentation.segmentation import SKSegmentation
+from segmentation.segmentation_per_pixels.segmentation2d import Segmentation
+from sklearn.linear_model import LogisticRegression
 
-def test_filters(path_to_image: str = 'data/1.png', show_hist: bool = False):
+
+def test_filters(path_to_image: str, show_hist: bool = False):
     image = Image(path_to_image=path_to_image, dim=2)
+    print(image.shape())
     if show_hist: image.histogram()
-    #image.apply_filter(lambda x: x > 83) 83 80 60
-    image.apply_filter(filters_2d.threshold, threshold=83)
-    image.apply_filter(filters_2d.MaxFilter, size=3, times=1)
-    print(image.data.shape)
+    #image.apply_filter(filters_2d.Threshold(80), filters_2d.MaxFilter(3))
+    image2 = Image(data = filters_2d.Threshold(80).make_mask(image))
+    image2.show()
+    
+
+
+def test_segmentation_sk(path_to_image: str):
+    image = Image(path_to_image=path_to_image, dim=2)
+    sgm = SKSegmentation(image)
     image.show()
     image.show_segments(Marker([480, 1595, 581, 1677], 1))
 
 
-def test_segmentation(path_to_image: str = 'data/1.png'):
+def test_segmentation(path_to_image: str):
+    # simple img
+    # image = Image(data = np.array([[10 * i for i in range(10)] for j in range(5)]))
+    # m = MarkerContainer([Marker([2, 3, 2, 3], 1)])
+    # image.draw_marker(m)
+    # image.show()
+    # sgm = Segmentation(1, image, m, [filters_2d.BaseFilter2D()])
+
+    # usual img
     image = Image(path_to_image=path_to_image, dim=2)
-    sgm = SKSegmentation(image)
+    m = MarkerContainer([Marker([480, 1610, 581, 1677], 1)])
+    image.apply_filter(filters_2d.Threshold(80), filters_2d.MaxFilter(3))
     image.show()
-    image.show_segmentation()
+    # add 2 classes, check with markers!
+    sgm = Segmentation(LogisticRegression(), image, m, [filters_2d.BaseFilter2D()])
+    result = Image(data = sgm.pred_img)
+    result.show()
 
 
-def test_markers(path_to_image: str = 'data/1.png'):
+def test_markers(path_to_image: str):
     image = Image(path_to_image=path_to_image, dim=2)
-    #t = Marker([480, 1595, 581, 1677], 1)
     markers = MarkerContainer()
     markers.from_file('data/markers.txt')
     image.draw_marker(markers)
-    for el in markers.markers:
-        print(el)
+    for marker in markers:
+        print(marker)
     image.show()
 
 
 if __name__ == "__main__":
-    test_filters(path_to_image='data/1.png')
+    test_segmentation(path_to_image='data/1.png')
 
