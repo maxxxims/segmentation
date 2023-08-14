@@ -35,13 +35,13 @@ def test_segmentation(path_to_image: str):
 
     # usual img
     image = Image(path_to_image=path_to_image, dim=2)
-    m = MarkerContainer([Marker([480, 1610, 581, 1677], 1)])
-    image.apply_filter(filters_2d.Threshold(80), filters_2d.MaxFilter(3))
+    m = MarkerContainer([Marker([480, 1610, 581, 1677], 1), Marker([167, 1385, 235, 1449], 0)])
+    #image.apply_filter(filters_2d.Threshold(80), filters_2d.MaxFilter(3))
     image.show()
-    # add 2 classes, check with markers!
-    sgm = Segmentation(LogisticRegression(), image, m, [filters_2d.BaseFilter2D()])
-    result = Image(data = sgm.pred_img)
-    result.show()
+    sgm = Segmentation(LogisticRegression())
+    sgm.segmentate(image, m, [filters_2d.BaseFilter2D(), filters_2d.Threshold(80)])
+    image.show_segments(m[0], fill_color=0)
+    image.show_segments(m[1])
 
 
 def test_markers(path_to_image: str):

@@ -73,6 +73,9 @@ class MarkerContainer:
         else:
             return []
         
+    def __getitem__(self, item: int):
+        return self.markers[item]
+        
     
     def __iter__(self):
         self.index_iter = 0

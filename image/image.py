@@ -11,6 +11,7 @@ class Image:
             self.data_raw = kwargs.get('data')
             self.data = kwargs.get('data')
             self.dim = kwargs.get('data').shape
+            self.max_color = np.max(self.data)
             return None
         self.dim = dim
         if dim == 2:
@@ -18,6 +19,7 @@ class Image:
                 img.load()
                 self.data_raw = np.array(img)
                 self.data = np.array(img)
+                self.max_color = np.max(self.data)
                 #self.data = img
                 
 
@@ -28,7 +30,7 @@ class Image:
             filter.change_image(self)
 
 
-    def draw_marker(self, markers: MarkerContainer|Marker) -> None:
+    def draw_marker(self, markers: Marker) -> None:
         markers.draw(self.data)
 
 
@@ -48,7 +50,7 @@ class Image:
     def show(self, show_original: bool = False):
         #IMG.fromarray(self.data).convert('P').show()
         if show_original:
-            self._show(self.data_raw)
+            self._show(self.data_raw, title='original image')
         else:
             self._show(self.data)
 
@@ -58,11 +60,15 @@ class Image:
         self._show(t)
 
     
-    def show_segments(self, marker: Marker):
-        t = np.copy(self.data_raw)
-        value = self.data[marker.x1, marker.y1]
-        print(f'value = {value}')
-        t[self.data == value] = 0
+    def show_segments(self, marker: Marker, mask = None, fill_color: int = 0):
+        if not mask:
+            value = self.data[marker.y1, marker.x1]
+            
+        else: 
+            value = mask.data[marker.y1, marker.x1]
+        t = np.copy(self.data_raw)    
+        print(f'marker class = {marker.value}')
+        t[self.data != value] = fill_color
         self._show(t)
 
 
@@ -74,7 +80,9 @@ class Image:
         return self.dim
     
 
-    def _show(self, data, **kwargs):
+    def _show(self, data, title: str = None, **kwargs):
+        if title:
+            plt.title(title)
         plt.imshow(data, cmap='gray', **kwargs)
         plt.show()
     

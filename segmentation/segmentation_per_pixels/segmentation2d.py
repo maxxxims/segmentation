@@ -7,8 +7,12 @@ import pandas as pd
 
 
 class Segmentation:
-    def __init__(self, model, image: Image, markers: MarkerContainer, filters: list[BaseFilter2D]) -> None:
+    def __init__(self, model) -> None:
         self.model = model
+
+    
+    def segmentate(self, image: Image, markers: MarkerContainer,
+                filters: list[BaseFilter2D], inplace_image: bool = True):
         self.height, self.widht = image.shape()
         self.n_filters = len(filters)
         # переводим в массив [[кол-во фильтров] * высота * ширина (=количество пикселей)]
@@ -16,8 +20,8 @@ class Segmentation:
                                        (self.height * self.widht, self.n_filters))
         
         #print(self.filtred_data)
-        print(filtred_data.shape)
-        print(2 * self.height + 3  )
+        #print(filtred_data.shape)
+        #print(2 * self.height + 3  )
 
         # делаем тестовую выборку на основе разметки
         x_test = []
@@ -30,7 +34,12 @@ class Segmentation:
         #print(x_test)
 
         # обучение модели
-        model.fit(x_test, y_test)
-        self.model = model
-        y_pred = model.predict(filtred_data)
+        self.model.fit(x_test, y_test)
+        self.model = self.model
+        y_pred = self.model.predict(filtred_data)
+        #print(y_pred)
         self.pred_img = np.transpose(np.reshape(y_pred, (self.widht, self.height)))
+        if inplace_image:
+            image.data = self.pred_img 
+        else:
+            return self.pred_img 
