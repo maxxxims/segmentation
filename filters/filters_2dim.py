@@ -3,6 +3,10 @@ from PIL import Image as IMG
 from PIL import ImageFilter
 from filters.filters import BaseFilter2D
 from image.image import Image
+from scipy.ndimage import gaussian_filter, median_filter, laplace, variance
+import scipy.ndimage as nd
+
+
 
 class Threshold(BaseFilter2D):
     def __init__(self, threshold: int) -> None:
@@ -38,6 +42,41 @@ class MaxFilter(BaseFilter2D):
             return np.array(img)
         self.filter = filter_work
         self.name = 'Max Filter'
+
+
+class GaussianFilter(BaseFilter2D):
+    def __init__(self, sigma: int) -> None:
+        super().__init__()
+        def filter_work(image: Image) -> np.array:
+            return gaussian_filter(image.data, sigma=sigma)
+        self.filter = filter_work
+        self.name = 'Gaussian Filter'
+
+
+class MedianFilter(BaseFilter2D):
+    def __init__(self, size: int) -> None:
+        super().__init__()
+        def filter_work(image: Image) -> np.array:
+            return median_filter(image.data, size=size)
+        self.filter = filter_work
+        self.name = 'Median Filter'
+
+
+class LaplacianDifference(BaseFilter2D):
+    def __init__(self) -> None:
+        super().__init__()
+        def filter_work(image: Image) -> np.array:
+            return laplace(image.data)
+        self.filter = filter_work
+        self.name = 'Laplacian Difference'
+
+class VarianceFilter(BaseFilter2D):
+    def __init__(self) -> None:
+        super().__init__()
+        def filter_work(image: Image) -> np.array:
+            return variance(image.data)
+        self.filter = filter_work
+        self.name = 'Variance Filter'
 
 
 class ColorScale(BaseFilter2D):

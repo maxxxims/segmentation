@@ -11,33 +11,29 @@ class Segmentation:
 
     
     def segmentate(self, image: Image, markers: MarkerContainer,
-                filters: list[BaseFilter2D], inplace_image: bool = True):
+                filters: list[BaseFilter2D], inplace_image: bool = True, informing: bool = True):
+        self.dim = image.dim
         self.height, self.widht = image.shape()
         self.n_filters = len(filters)
-        # переводим в массив [[кол-во фильтров] * высота * ширина (=количество пикселей)]
-        filtred_data = np.reshape(np.transpose(np.array([ filter.make_mask(image) for filter in filters])), 
-                                       (self.height * self.widht, self.n_filters))
-        self.filters_names = [filter.name for filter in filters]
-        #print(self.filtred_data)
-        #print(filtred_data.shape)
-        #print(2 * self.height + 3  )
 
-        # делаем тестовую выборку на основе разметки
-        x_test = []
-        y_test = []
-        for marker in markers:
-            for x in range(marker.x1, marker.x4 + 1):                       # +1 ?
-                for y in range(marker.y1, marker.y4 + 1):
-                    x_test.append(filtred_data[x * self.height + y])
-                    y_test.append(marker.value)
-        #print(x_test)
+        if informing: print('Appplying filters...')
+        filtred_data = get_selection_2d(image, filters, self.height, self.widht, self.n_filters)
+        self.filters_names = get_filters_names(filters)
+
+
+        if informing: print('Making test data...')
+        x_test, y_test = get_test_data_2d(filtred_data, markers, self.height)
+
 
         # обучение модели
+        if informing: print('Fitting model...')
         self.model.fit(x_test, y_test)
         self.model = self.model
+
+        if informing: print('Making predictions...')
         y_pred = self.model.predict(filtred_data)
-        #print(y_pred)
-        self.pred_img = np.transpose(np.reshape(y_pred, (self.widht, self.height)))
+        if informing: print('Transforming result...')
+        self.pred_img = reshape_data(y_pred, self.height, self.widht)
         if inplace_image:
             image.data = self.pred_img 
         else:
@@ -49,3 +45,36 @@ class Segmentation:
             return {key: value for key,value in zip(self.filters_names, self.model.feature_importances_)}
         elif 'coef_' in dir(self.model):
             return self.model.coef_
+        
+
+def get_selection_2d(image: Image, filters: list[BaseFilter2D],
+                    height: int, widht: int, n_filters: int) -> np.array:
+    # переводим в массив [[кол-во фильтров] * высота * ширина (=количество пикселей)]
+    return np.reshape(np.transpose(np.array([ filter.make_mask(image) for filter in filters])), 
+                                        (height * widht, n_filters))
+    
+def get_filters_names(filters: list[BaseFilter2D]) -> list:
+    return [filter.name for filter in filters]
+
+
+def get_test_data_2d(filtred_data: np.array, markers: MarkerContainer, height: int) -> tuple[list, list]:
+    # делаем тестовую выборку на основе разметки
+    x_test = []
+    y_test = []
+    for marker in markers:
+        if marker.type == 'rectangle':
+            for x in range(marker.x1, marker.x4 + 1):                       # +1 ?
+                for y in range(marker.y1, marker.y4 + 1):
+                    x_test.append(filtred_data[x * height + y])
+                    y_test.append(marker.value)
+        
+        elif marker.type == 'fill':
+            for x, y in marker.points:
+                x_test.append(filtred_data[x * height + y])
+                y_test.append(marker.value)
+                
+    return (x_test, y_test)
+
+
+def reshape_data(y_pred: np.array, height: int, widht: int) -> np.array:
+    return np.transpose(np.reshape(y_pred, (widht, height)))

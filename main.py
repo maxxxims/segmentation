@@ -13,8 +13,10 @@ def test_filters(path_to_image: str, show_hist: bool = False):
     print(image.shape())
     if show_hist: image.histogram()
     #image.apply_filter(filters_2d.Threshold(80), filters_2d.MaxFilter(3))
-    image2 = Image(data = filters_2d.Threshold(80).make_mask(image))
-    image2.show()
+    image.apply_filter(filters_2d.Threshold(80))
+    image.show()
+    # image2 = Image(data = filters_2d.Threshold(80).make_mask(image))
+    # image2.show()
     
 
 
@@ -39,7 +41,8 @@ def test_segmentation(path_to_image: str):
     #image.apply_filter(filters_2d.Threshold(80), filters_2d.MaxFilter(3))
     image.show()
     sgm = Segmentation(RandomForestClassifier())
-    sgm.segmentate(image, m, [filters_2d.BaseFilter2D(), filters_2d.Threshold(80)])
+    sgm.segmentate(image, m, [filters_2d.MedianFilter(5), filters_2d.GaussianFilter(5), filters_2d.LaplacianDifference(),
+                               filters_2d.BaseFilter2D()])
     image.show_segments(m[0], fill_color=0)
     image.show_segments(m[1])
     print(sgm.feature_weights())
@@ -56,5 +59,5 @@ def test_markers(path_to_image: str):
 
 
 if __name__ == "__main__":
-    test_filters(path_to_image='data/1.png')
+    test_segmentation(path_to_image='data/1.png')
 

@@ -12,6 +12,7 @@ class Marker:
             1 2  or 1 .
             3 4     . 4
         """
+        self.dim = dim
         if value < 0:
             self.points = []
             self.type = EMPTY
