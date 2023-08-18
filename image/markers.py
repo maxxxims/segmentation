@@ -31,8 +31,8 @@ class Marker:
                 self.y3 = self.y4
             elif type == FILL:
                 self.x1 = points[0]
-                self.y1 = points[0]
-                self.points = [(points[i], points[i + 1]) for i in range(len(points) // 2)]
+                self.y1 = points[1]
+                self.points = [(points[2 * i], points[2 * i + 1]) for i in range(len(points) // 2)]
 
             
     def draw(self, data: np.array, color: int = 255) -> None:
@@ -44,7 +44,10 @@ class Marker:
 
 
     def __str__(self):
-        return f'{self.x1} {self.y1} {self.x2} {self.y2} {self.x3} {self.y3} {self.x4} {self.y4} {self.value}'
+        if self.type == RECTANGLE:
+            return f'{self.x1} {self.y1} {self.x2} {self.y2} {self.x3} {self.y3} {self.x4} {self.y4} {self.value}'
+        elif self.type == FILL:
+            return f'{self.x1} {self.y1} {self.value}'
 
 
 

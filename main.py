@@ -15,10 +15,7 @@ def test_filters(path_to_image: str, show_hist: bool = False):
     #image.apply_filter(filters_2d.Threshold(80), filters_2d.MaxFilter(3))
     image.apply_filter(filters_2d.Threshold(80))
     image.show()
-    # image2 = Image(data = filters_2d.Threshold(80).make_mask(image))
-    # image2.show()
     
-
 
 def test_segmentation_sk(path_to_image: str):
     image = Image(path_to_image=path_to_image, dim=2)
@@ -38,7 +35,6 @@ def test_segmentation(path_to_image: str):
     # usual img
     image = Image(path_to_image=path_to_image, dim=2)
     m = MarkerContainer([Marker([480, 1610, 581, 1677], 1), Marker([167, 1385, 235, 1449], 0)])
-    #image.apply_filter(filters_2d.Threshold(80), filters_2d.MaxFilter(3))
     image.show()
     sgm = Segmentation(RandomForestClassifier())
     sgm.segmentate(image, m, [filters_2d.MedianFilter(5), filters_2d.GaussianFilter(5), filters_2d.LaplacianDifference(),
@@ -51,13 +47,21 @@ def test_segmentation(path_to_image: str):
 def test_markers(path_to_image: str):
     image = Image(path_to_image=path_to_image, dim=2)
     markers = MarkerContainer()
-    markers.from_file('data/markers.txt')
+    markers.from_file('data/markers_3.txt')
     image.draw_marker(markers)
     for marker in markers:
         print(marker)
     image.show()
 
 
+def test_fill_markers(path_to_image: str):
+    image = Image(path_to_image=path_to_image, dim=2)
+    mkr = MarkerContainer()
+    mkr.from_file('data/marker_fill_1.txt')
+    image.draw_marker(mkr)
+    image.show()
+
+
 if __name__ == "__main__":
-    test_segmentation(path_to_image='data/1.png')
+    test_markers(path_to_image='data/3.png')
 
