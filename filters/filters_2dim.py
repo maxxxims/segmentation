@@ -14,7 +14,7 @@ class Threshold(BaseFilter2D):
             #image.data > threshold
             return temp
         self.filter = filter_work
-
+        self.name = 'Threshold Filter'
 
 class MinFilter(BaseFilter2D):
     def __init__(self, size: int, times: int = 1) -> None:
@@ -25,6 +25,7 @@ class MinFilter(BaseFilter2D):
                 img = img.filter(ImageFilter.MinFilter(self.size))
             return np.array(img)
         self.filter = filter_work
+        self.name = 'Min Filter'
 
 
 class MaxFilter(BaseFilter2D):
@@ -36,3 +37,18 @@ class MaxFilter(BaseFilter2D):
                 img = img.filter(ImageFilter.MaxFilter(size))
             return np.array(img)
         self.filter = filter_work
+        self.name = 'Max Filter'
+
+
+class ColorScale(BaseFilter2D):
+    def __init__(self) -> None:
+        super().__init__()
+        def filter_work(image: Image) -> np.array:
+            mn, mx = np.min(image.data), np.max(image.data)
+            print(mn,mx)
+            temp = np.copy(image.data)   
+            temp =  255 * (temp - mn) / (mx - mn)
+            print(temp)
+            return temp
+        self.filter = filter_work
+        self.name = 'Color scale'

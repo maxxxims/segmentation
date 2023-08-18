@@ -5,7 +5,6 @@ from filters.filters import BaseFilter2D
 import pandas as pd
 
 
-
 class Segmentation:
     def __init__(self, model) -> None:
         self.model = model
@@ -18,7 +17,7 @@ class Segmentation:
         # переводим в массив [[кол-во фильтров] * высота * ширина (=количество пикселей)]
         filtred_data = np.reshape(np.transpose(np.array([ filter.make_mask(image) for filter in filters])), 
                                        (self.height * self.widht, self.n_filters))
-        
+        self.filters_names = [filter.name for filter in filters]
         #print(self.filtred_data)
         #print(filtred_data.shape)
         #print(2 * self.height + 3  )
@@ -43,3 +42,10 @@ class Segmentation:
             image.data = self.pred_img 
         else:
             return self.pred_img 
+        
+
+    def feature_weights(self) -> np.array:
+        if 'feature_importances_' in dir(self.model):
+            return {key: value for key,value in zip(self.filters_names, self.model.feature_importances_)}
+        elif 'coef_' in dir(self.model):
+            return self.model.coef_

@@ -36,6 +36,10 @@ class Image:
 
     def set_image(self, new_data: np.array):
         self.data = new_data
+    
+
+    def reset(self) -> None:
+        self.data =np.copy(self.data_raw)
         
 
     def get_image(self):
