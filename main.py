@@ -1,12 +1,11 @@
-from image.image import Image
-from image.markers import Marker, MarkerContainer
 import numpy as np
 import matplotlib.pyplot as plt
-import filters.filters_2dim as filters_2d
-from segmentation.segmentation import SKSegmentation
-from segmentation.segmentation_per_pixels.segmentation2d import Segmentation
+from image import Image, Marker, MarkerContainer
+from segmentation import SKSegmentation, Segmentation
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+import filters.filters_2dim as filters_2d
+
 
 def test_filters(path_to_image: str, show_hist: bool = False):
     image = Image(path_to_image=path_to_image, dim=2)

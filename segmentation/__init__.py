@@ -1,0 +1,2 @@
+from segmentation.segmentation import SKSegmentation
+from segmentation.segmentation_per_pixels.segmentation2d import Segmentation
