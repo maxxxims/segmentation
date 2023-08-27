@@ -1,0 +1,24 @@
+[
+  {
+    "type": "RECTANGLE",
+    "value": 1,
+    "dim": 2,
+    "points": [
+      477,
+      1103,
+      645,
+      1159
+    ]
+  },
+  {
+    "type": "RECTANGLE",
+    "value": 0,
+    "dim": 2,
+    "points": [
+      746,
+      1371,
+      822,
+      1420
+    ]
+  }
+]

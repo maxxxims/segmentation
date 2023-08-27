@@ -11,7 +11,7 @@ class Segmentation:
 
     
     def segmentate(self, image: Image, markers: MarkerContainer,
-                filters: list[BaseFilter2D], inplace_image: bool = True, informing: bool = True):
+                filters: list[BaseFilter2D], inplace_image: bool = True, informing: bool = True, test_markers=False):
         self.dim = image.dim
         self.height, self.widht = image.shape()
         self.n_filters = len(filters)
@@ -23,7 +23,10 @@ class Segmentation:
 
         if informing: print('Making test data...')
         x_test, y_test = get_test_data_2d(filtred_data, markers, self.height)
-
+        if test_markers:
+            print(np.shape(x_test), np.shape(filtred_data))
+            test_markers_(markers, filtred_data, self.height, self.widht)
+            return None
 
         # обучение модели
         if informing: print('Fitting model...')
@@ -59,22 +62,44 @@ def get_filters_names(filters: list[BaseFilter2D]) -> list:
 
 def get_test_data_2d(filtred_data: np.array, markers: MarkerContainer, height: int) -> tuple[list, list]:
     # делаем тестовую выборку на основе разметки
+    # x_test = []
+    # y_test = []
+    # for marker in markers:
+    #     if marker.type == 'rectangle':
+    #         for x in range(marker.x1, marker.x4 + 1):                       # +1 ?
+    #             for y in range(marker.y1, marker.y4 + 1):
+    #                 x_test.append(filtred_data[x * height + y])
+    #                 y_test.append(marker.value)
+        
+    #     elif marker.type == 'fill':
+    #         for x, y in marker.points:
+    #             x_test.append(filtred_data[x * height + y])
+    #             y_test.append(marker.value)
     x_test = []
     y_test = []
     for marker in markers:
-        if marker.type == 'rectangle':
-            for x in range(marker.x1, marker.x4 + 1):                       # +1 ?
-                for y in range(marker.y1, marker.y4 + 1):
-                    x_test.append(filtred_data[x * height + y])
-                    y_test.append(marker.value)
-        
-        elif marker.type == 'fill':
-            for x, y in marker.points:
-                x_test.append(filtred_data[x * height + y])
-                y_test.append(marker.value)
-                
+        x_indexes = marker.to_x_selection_index(height)
+        for x in x_indexes:
+            x_test.append(filtred_data[x])
+            y_test.append(marker.value)
+
     return (x_test, y_test)
 
 
 def reshape_data(y_pred: np.array, height: int, widht: int) -> np.array:
     return np.transpose(np.reshape(y_pred, (widht, height)))
+
+
+def test_markers_(markers: MarkerContainer, filtred_data: np.array, height: int, widht: int, filter_index: int = -1):
+    x_test = []
+    x_indexes = []
+    for marker in markers:
+        x_indexes += marker.to_x_selection_index(height)
+    for i in range(len(filtred_data)):
+        if i in x_indexes:
+            x_test.append(0)
+        else:
+            x_test.append(filtred_data[i,-1])
+    print('done')
+    img = Image(data=reshape_data(x_test, height, widht))
+    img.show()
