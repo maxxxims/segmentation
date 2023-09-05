@@ -2,9 +2,8 @@ import numpy as np
 from PIL import Image as IMG
 from PIL import ImageFilter
 from filters.filters import BaseFilter2D
-from image.image import Image
+from image import Image
 from scipy.ndimage import gaussian_filter, median_filter, laplace, variance
-import scipy.ndimage as nd
 
 
 
@@ -15,10 +14,10 @@ class Threshold(BaseFilter2D):
             temp = image.data
             temp[image.data > threshold] = 255
             temp[image.data <= threshold] = 0
-            #image.data > threshold
             return temp
         self.filter = filter_work
-        self.name = 'Threshold Filter'
+        self.name = f'Threshold Filter threshold={threshold}'
+        
 
 class MinFilter(BaseFilter2D):
     def __init__(self, size: int, times: int = 1) -> None:
@@ -50,7 +49,7 @@ class GaussianFilter(BaseFilter2D):
         def filter_work(image: Image) -> np.array:
             return gaussian_filter(image.data, sigma=sigma)
         self.filter = filter_work
-        self.name = 'Gaussian Filter'
+        self.name = f'Gaussian Filter sigma={sigma}'
 
 
 class MedianFilter(BaseFilter2D):
@@ -59,7 +58,7 @@ class MedianFilter(BaseFilter2D):
         def filter_work(image: Image) -> np.array:
             return median_filter(image.data, size=size)
         self.filter = filter_work
-        self.name = 'Median Filter'
+        self.name = f'Median Filter size={size}'
 
 
 class LaplacianDifference(BaseFilter2D):

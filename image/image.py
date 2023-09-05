@@ -1,12 +1,15 @@
 import numpy as np
 from PIL import Image as IMG
 import matplotlib.pyplot as plt
-from image.markers import Marker, MarkerContainer
+from image.markers import Marker
 from filters.filters import BaseFilter2D
 
 
 class Image:
     def __init__(self, path_to_image: str = '',  dim: int = 2, **kwargs: str) -> None:
+        """ 
+            :kwargs data: if passed make img from array
+        """
         if 'data' in kwargs.keys():
             self.data_raw = kwargs.get('data')
             self.data = kwargs.get('data')
@@ -20,11 +23,8 @@ class Image:
                 self.data_raw = np.array(img)
                 self.data = np.array(img)
                 self.max_color = np.max(self.data)
-                #self.data = img
                 
 
-    # def apply_filter(self, filter: callable, **kwargs):
-    #     self.data = filter(np.array(self.data), **kwargs)
     def apply_filter(self, *filters: BaseFilter2D):
         for filter in filters:
             filter.change_image(self)
@@ -39,7 +39,7 @@ class Image:
     
 
     def reset(self) -> None:
-        self.data =np.copy(self.data_raw)
+        self.data = np.copy(self.data_raw)
         
 
     def get_image(self):
@@ -52,11 +52,11 @@ class Image:
 
 
     def show(self, show_original: bool = False):
-        #IMG.fromarray(self.data).convert('P').show()
         if show_original:
             self._show(self.data_raw, title='original image')
         else:
             self._show(self.data)
+
 
     def show_segmentation(self):
         t = np.copy(self.data_raw)
@@ -67,7 +67,6 @@ class Image:
     def show_segments(self, marker: Marker, mask = None, fill_color: int = 0):
         if not mask:
             value = self.data[marker.y1, marker.x1]
-            
         else: 
             value = mask.data[marker.y1, marker.x1]
         t = np.copy(self.data_raw)    
