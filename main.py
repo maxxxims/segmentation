@@ -74,6 +74,6 @@ def test_hand_markers(path_to_file: str):
 
 if __name__ == "__main__":
     # test_segmentation(path_to_image='data/1.png')
-    # test_segmentation(path_to_image='data/1.png')
+    test_segmentation(path_to_image='data/1.png')
 
-    test_hand_markers(path_to_file='data/1 — копия.png')
+    # test_hand_markers(path_to_file='data/1 — копия.png')

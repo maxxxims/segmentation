@@ -48,7 +48,7 @@ class MarkerContainer:
             img.load()
             markers_mask = np.array(img)
         
-        color2mark, value2point = MARKUP.get()
+        color2mark, value2point = MARKUP(markers_mask).get()
         markers_mask = np.array(list(map(lambda x: [color2mark[np.sum(el)]
                                                     if not (el[0] == el[1] == el[2]) and np.sum(el) in color2mark.keys()
                                                     else -1

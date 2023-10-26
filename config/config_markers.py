@@ -19,3 +19,5 @@ class MARKUP:
 
     def get(self) -> tuple[dict[int, int], dict[int, list[int]]]:
         return (self.color2mark, self.value2point)
+    
+    name = 'Hello world!'
