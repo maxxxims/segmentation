@@ -1,11 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from image import Image, Marker, MarkerRectangle2D, MarkerFill2D, MarkerContainer
-import filters.filters_2dim as filters_2d
+from filters import  filters_2dim as filters_2d
 from filters.filters import BaseFilter2D
 from segmentation import SKSegmentation, Segmentation
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+
+#import .filters.filters_2dim as BaseFilter2D
 
 
 
@@ -72,8 +74,8 @@ def test_hand_markers(path_to_file: str):
     img.show()
 
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
     # test_segmentation(path_to_image='data/1.png')
-    test_segmentation(path_to_image='data/1.png')
+test_segmentation(path_to_image='segmentation/data/1.png')
 
     # test_hand_markers(path_to_file='data/1 — копия.png')

@@ -1,4 +1,4 @@
-# from . import Image, Marker, MarkerContainer
-from image.image import Image
-from image.markers_container import MarkerContainer 
-from image.markers import Marker, MarkerFill2D, MarkerRectangle2D
+
+from .image import Image
+from .markers import Marker, MarkerFill2D, MarkerRectangle2D
+from .markers_container import MarkerContainer

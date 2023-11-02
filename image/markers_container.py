@@ -1,9 +1,9 @@
-from image.markers import *
-from image.image import Image
+from .markers import *
+from .image import Image
 from collections import defaultdict
 import json
 from PIL import Image as IMG
-from config import MARKER_TYPES, MARKUP
+from ..config import MARKER_TYPES, MARKUP
 
 
 class MarkerContainer:

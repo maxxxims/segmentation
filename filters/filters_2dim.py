@@ -1,8 +1,8 @@
 import numpy as np
 from PIL import Image as IMG
 from PIL import ImageFilter
-from filters.filters import BaseFilter2D
-from image import Image
+from .filters import BaseFilter2D
+from ..image import Image
 from scipy.ndimage import gaussian_filter, median_filter, laplace, variance
 
 

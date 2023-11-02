@@ -1,5 +1,5 @@
 import numpy as np
-from config import MARKER_TYPES
+from ..config import MARKER_TYPES
 
 
 class Marker:

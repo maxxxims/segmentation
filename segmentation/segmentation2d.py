@@ -1,7 +1,6 @@
 import numpy as np
-from image.image import Image
-from image import Marker, MarkerContainer
-from filters.filters import BaseFilter2D
+from ..image import Image, Marker, MarkerContainer
+from ..filters.filters import BaseFilter2D
 import pandas as pd
 
 

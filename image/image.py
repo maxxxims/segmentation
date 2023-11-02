@@ -1,10 +1,8 @@
 import numpy as np
 from PIL import Image as IMG
 import matplotlib.pyplot as plt
-from image.markers import Marker
-from filters.filters import BaseFilter2D
-
-
+from ..image.markers import Marker
+from ..filters.filters import BaseFilter2D
 class Image:
     def __init__(self, path_to_image: str = '',  dim: int = 2, **kwargs: str) -> None:
         """ 

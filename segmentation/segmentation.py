@@ -1,5 +1,5 @@
 import skimage.filters as skfilters
-from image.image import Image
+from ..image import Image
 import matplotlib.pyplot as plt
 
 
