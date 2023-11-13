@@ -24,12 +24,13 @@ class MarkerMakerRectangle2DBinary(MarkerMaker):
         self.y1 = y1
         self.x4 = x4
         self.y4 = y4
+    
 
     def _load_slice(self) -> np.ndarray:
         """
             open img and load slice
         """
-        with IMG.open(self.path_to_image) as img:
+        with IMG.open(self.path_to_image, 'r') as img:
             img.load()
         return np.array(img)
     
@@ -43,9 +44,8 @@ class MarkerMakerRectangle2DBinary(MarkerMaker):
 
         class_1 = np.where(sliced_img >= self.threshold)
         class_0 = np.where(sliced_img < self.threshold)
-        print(f'shape class_1 = {class_1[0].shape}')
-        print(f'shape class_0 = {class_0[0].shape}')
-        # print(len)
+        print(f'instances of class 1 = {class_1[0].shape}')
+        print(f'instances of class 0 = {class_0[0].shape}')
         
         marker_list = []
 
@@ -55,17 +55,7 @@ class MarkerMakerRectangle2DBinary(MarkerMaker):
         if len(class_1[0]) != 0:
             class_1_index = np.vstack((class_1[1] + self.x1, class_1[0] + self.y1)).T.ravel()
             marker_list.append(MarkerFill2D(points=class_1_index, value=1))
-
-        #class_1_index = np.vstack((class_1[1] + self.x1, class_1[0] + self.y1)).T.ravel()
-        #class_0_index = np.vstack((class_0[1] + self.x1, class_0[0] + self.y1)).T.ravel()
-
         markers = MarkerContainer(marker_list)
-
-
-        # markers = MarkerContainer(markers=
-        #                           [MarkerFill2D(points=class_1_index, value=1), 
-        #                            MarkerFill2D(points=class_0_index, value=0)], dim=2
-        #                         ) 
         return markers
 
 

@@ -118,7 +118,6 @@ def test_del_border(path_to_orig_image: str, path_to_border_image: str):
 
 def test_metrics_evaluator(path_to_orig_image: str, path_to_segmented_img: str, path_to_border_image: str):
     image = Image(path_to_image=path_to_orig_image, dim=2)
-
     p1 = (1957, 2106)
     p2 = (1957 + 100, 2106 + 100)
     marker_maker = MarkerMakerRectangle2DBinary(path_to_segmented_image, *p1, *p2)
@@ -130,11 +129,8 @@ def test_metrics_evaluator(path_to_orig_image: str, path_to_segmented_img: str, 
     sgm.fit(markers)
     result = sgm.predict()
     result.data = result.data * 255
-
     ground_truth = Image(path_to_image=path_to_segmented_image, dim=2)
     border_marker = MarkerBorder2D(Image(path_to_image=path_to_border_image, dim=2))
-
-    # image.data[border_marker.get_indexes()[1], border_marker.get_indexes()[0]] = 0
     image.draw_marker(border_marker)
     image.show(title="Image with no border") 
 

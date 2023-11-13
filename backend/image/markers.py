@@ -66,7 +66,7 @@ class MarkerFill2D(Marker):
 
     def draw(self, data: np.array, color: int = 255) -> None:
         for x, y in self.points:
-            data[y, x] = 255
+            data[y, x] = color
 
 
     def to_x_selection_index(self, height: int) -> list[int]:

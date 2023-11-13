@@ -29,12 +29,12 @@ class Evaluator:
         y_pred = mask[y_index_test, x_index_test]
 
         if np.max(y_pred) == 1:
-            print(f'upscale y_pred to 0-255')
+            #print(f'upscale y_pred to 0-255')
             y_pred *= 255
 
         for metric in metrics:
             metric_value = metric.get_score(y_real=y_real, y_pred=y_pred)
             print(f'{metric.name} = {metric_value}')
 
-        segmentated_image.show(show_original=False, title='Image for evaluate metrics')
+        # segmentated_image.show(show_original=False, title='Image for evaluate metrics')
         

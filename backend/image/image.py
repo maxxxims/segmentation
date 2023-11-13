@@ -28,8 +28,8 @@ class Image:
             filter.change_image(self)
 
 
-    def draw_marker(self, markers: Marker) -> None:
-        markers.draw(self.data)
+    def draw_marker(self, markers: Marker, color: int = 255) -> None:
+        markers.draw(self.data, color=color)
 
 
     def set_image(self, new_data: np.array):
@@ -88,6 +88,7 @@ class Image:
     
 
     def _show(self, data, title: str = None, **kwargs):
+        plt.figure(figsize=(10, 10))
         if title:
             plt.title(title)
         plt.imshow(data, cmap='gray', **kwargs)
