@@ -1,4 +1,6 @@
 import numpy as np
+
+from backend.config import MARKER_TYPES
 from ..config import MARKER_TYPES
 
 
@@ -8,8 +10,14 @@ class Marker:
         self.dim = dim
         self.type = type
         self.points = [].copy()
+
     def draw(self, data: np.array, color: int = 255) -> None:  ...
+
     def to_x_selection_index(self, height: int) -> list[int]:  ...
+    
+    def get_indexes(self):
+        return self.x_indexes, self.y_indexes
+
     def __str__(self):
         if self.type == MARKER_TYPES.RECTANGLE:
             return f'{self.x1} {self.y1} {self.x2} {self.y2} {self.x3} {self.y3} {self.x4} {self.y4} {self.value}'
@@ -53,7 +61,7 @@ class MarkerFill2D(Marker):
         super().__init__(value, dim, MARKER_TYPES.FILL)
         self.x1 = points[0]
         self.y1 = points[1]
-        self.points = [(points[2 * i], points[2 * i + 1]) for i in range(len(points) // 2)]
+        self.points = np.array([(points[2 * i], points[2 * i + 1]) for i in range(len(points) // 2)])
 
 
     def draw(self, data: np.array, color: int = 255) -> None:
@@ -66,4 +74,34 @@ class MarkerFill2D(Marker):
         for x, y in self.points:
             res.append(x * height + y)
         return res
+    
+    def get_indexes(self):
+        x_indexes, y_indexes = self.points.reshape(-1, 2).T
+        return (x_indexes, y_indexes)
+    
+
+
+class MarkerBorder2D(Marker):
+    """
+        markup the border
+    """
+    INNER_COLOR = [255, 242, 0, 255]
+    def __init__(self, image_border, where='outer') -> None:
+        """
+            :param image_border: image with border
+            :param where: 'inner' or 'outer' in what are the border
+        """
+        mask = ((
+            image_border.data[:, :, 0] == self.INNER_COLOR[0]
+            ) & (image_border.data[:, :, 1] == self.INNER_COLOR[1]) & (image_border.data[:, :, 2] == self.INNER_COLOR[2]))
         
+        if where == 'outer':
+            mask = ~mask
+        super().__init__()
+        (self.y_indexes, self.x_indexes) = np.where(mask)
+
+    
+    def draw(self, data: np.array, color: int = 0) -> None:
+        data[self.y_indexes, self.x_indexes] = color
+
+    

@@ -19,7 +19,7 @@ class Image:
             with IMG.open(path_to_image) as img:
                 img.load()
                 self.data_raw = np.array(img)
-                self.data = np.array(img)
+                self.data = np.copy(self.data_raw)
                 self.max_color = np.max(self.data)
                 
 
@@ -49,11 +49,14 @@ class Image:
         plt.show()
 
 
-    def show(self, show_original: bool = False):
+    def show(self, show_original: bool = False, title: str = None):
         if show_original:
             self._show(self.data_raw, title='original image')
         else:
-            self._show(self.data)
+            self._show(self.data, title=title)
+
+    def save(self, path_to_save: str):
+        plt.imsave(path_to_save, self.data, cmap='gray')
 
 
     def show_segmentation(self):
@@ -72,8 +75,11 @@ class Image:
         t[self.data != value] = fill_color
         self._show(t)
 
+    def offside(self):
+        return len(self.data == 85)
 
-    def shape(self):
+
+    def shape(self) -> tuple:
         return self.data.shape
     
 
@@ -87,3 +93,6 @@ class Image:
         plt.imshow(data, cmap='gray', **kwargs)
         plt.show()
     
+
+    def _apply_segmentation(self):
+        ...
