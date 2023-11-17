@@ -84,3 +84,7 @@ class MarkerContainer:
             raise StopIteration
         else:
             return self.markers[i]
+        
+
+    def __len__(self):
+        return len(self.markers)

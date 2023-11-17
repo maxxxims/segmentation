@@ -3,3 +3,4 @@ from .image import Image, Marker, MarkerContainer, MarkerFill2D, MarkerRectangle
 from .metrics import *
 
 from .segmentation import Segmentation
+from .image3d import Image3D

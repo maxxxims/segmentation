@@ -3,25 +3,25 @@ from PIL import Image as IMG
 import matplotlib.pyplot as plt
 from ..image.markers import Marker
 from ..filters.filters import BaseFilter2D
+from typing import Any
 class Image:
-    def __init__(self, path_to_image: str = '',  dim: int = 2, **kwargs: str) -> None:
+    def __init__(self, path_to_image: str = '', **kwargs: Any) -> None:
         """ 
             :kwargs data: if passed make img from array
         """
         if 'data' in kwargs.keys():
             self.data_raw = kwargs.get('data')
             self.data = kwargs.get('data')
-            self.dim = kwargs.get('data').shape
             self.max_color = np.max(self.data)
-            return None
-        self.dim = dim
-        if dim == 2:
-            with IMG.open(path_to_image) as img:
+        else:
+            with IMG.open(path_to_image, 'r') as img:
                 img.load()
                 self.data_raw = np.array(img)
                 self.data = np.copy(self.data_raw)
                 self.max_color = np.max(self.data)
-                
+        shape = self.data.shape
+        self.__height, self.__width = shape[0], shape[1]
+
 
     def apply_filter(self, *filters: BaseFilter2D):
         for filter in filters:
@@ -75,17 +75,18 @@ class Image:
         t[self.data != value] = fill_color
         self._show(t)
 
-    def offside(self):
-        return len(self.data == 85)
 
-
+    @property
     def shape(self) -> tuple:
         return self.data.shape
     
-
-    def dim(self):
-        return self.dim
+    @property
+    def height(self):
+        return self.__height
     
+    @property
+    def width(self):
+        return self.__width
 
     def _show(self, data, title: str = None, **kwargs):
         plt.figure(figsize=(10, 10))
@@ -95,5 +96,4 @@ class Image:
         plt.show()
     
 
-    def _apply_segmentation(self):
-        ...
+    

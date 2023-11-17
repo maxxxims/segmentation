@@ -32,9 +32,11 @@ class Evaluator:
             #print(f'upscale y_pred to 0-255')
             y_pred *= 255
 
+        logs = {}
         for metric in metrics:
             metric_value = metric.get_score(y_real=y_real, y_pred=y_pred)
-            print(f'{metric.name} = {metric_value}')
-
+            logs[metric.name] = metric_value
+            # print(f'{metric.name} = {metric_value}')
+        return logs
         # segmentated_image.show(show_original=False, title='Image for evaluate metrics')
         
