@@ -1,6 +1,6 @@
 import numpy as np
 from ..image import Image, Marker
-
+from ..filters.filters import BaseFilter2D
 
 
 class Image3D:
@@ -50,8 +50,11 @@ class Image3D:
 
 
     def draw_marker(self, marker: Marker, color: int = 255):
-        
         marker.draw(self.data, color=color)
+
+    # def apply_filter(self, filter: BaseFilter2D) -> np.array:
+    #     filter.apply(self.data)
+    #     return self.data
 
     def load_images(self, indx_start: int, indx_end: int):
         """
@@ -78,6 +81,17 @@ class Image3D:
     def shape(self) -> tuple[int, int, int]:
         return self.__shape
     
+    @property
+    def depth(self) -> int:
+        return self.shape[0]
+    
+    @property
+    def height(self) -> int:
+        return self.shape[1]
+    
+    @property
+    def width(self) -> int:
+        return self.shape[2]
 
     @property
     def len_loaded_images(self) -> int:

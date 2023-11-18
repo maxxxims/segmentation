@@ -13,8 +13,10 @@ class Segmentation:
         self.__filters_names = get_filters_names(filters)
         
 
-    def fit(self, image: Image, markers: MarkerContainer, check: bool = False):
-        features = self.apply_filters(image)
+    def fit(self, image: Image, markers: MarkerContainer, 
+            check: bool = False, features: np.ndarray = None):
+        if features is None:
+            features = self.apply_filters(image)
         if self.informing: print('Making train data...')
         # get x_train and y_train
         class2data = {}
@@ -23,31 +25,34 @@ class Segmentation:
             value = m.value
             x_indexes, y_indexes = m.get_indexes()
             class2data[value] = features[y_indexes, x_indexes]
+            print(f'feature shape = {np.shape(features[y_indexes, x_indexes])}')
             y_train += [value] * len(x_indexes)
         
         #print(f'y values = {np.unique(y_train)}')
         x_train = np.concatenate([class2data[m.value] for m in markers])
+        print(f'x_train shape = {np.shape(x_train)}, y_train shape = {np.shape(y_train)}')
         x_train, y_train = shuffle(x_train, y_train, random_state=42)
-
+        
         if self.informing: print('Fitting model...')
         self.__model.fit(x_train, y_train)
         print(f'x_train shape = {np.shape(x_train)}, y_train shape = {np.shape(y_train)}')
-        if check:
-            from matplotlib import pyplot as plt
-            new_data = self.image.data
-            for m in markers:
-                value = m.value
-                x_indexes, y_indexes = m.get_indexes()
-                new_data[y_indexes, x_indexes] = value * 255
-            plt.imshow(new_data, cmap='gray')
-            plt.show()
+        # if check:
+        #     from matplotlib import pyplot as plt
+        #     new_data = self.image.data
+        #     for m in markers:
+        #         value = m.value
+        #         x_indexes, y_indexes = m.get_indexes()
+        #         new_data[y_indexes, x_indexes] = value * 255
+        #     plt.imshow(new_data, cmap='gray')
+        #     plt.show()
 
 
-    def predict(self, image: Image) -> Image:
+    def predict(self, image: Image, features: np.ndarray = None) -> Image:
         """
             Segmentate image
         """
-        features = self.apply_filters(image)
+        if features is None:
+            features = self.apply_filters(image)
         if self.informing: print('Making predictions...')
         preds = self.__model.predict(features.reshape((image.height * image.width, self.n_filters)))
         preds = np.reshape(preds, (image.height, image.width))
@@ -56,27 +61,9 @@ class Segmentation:
 
     def fit_and_predict(self, image: Image, markers: MarkerContainer) -> Image:
         features = self.apply_filters(image)
-        # fit
-        if self.informing: print('Making train data...')
-        class2data = {}
-        y_train = []
-        for m in markers:
-            value = m.value
-            x_indexes, y_indexes = m.get_indexes()
-            class2data[value] = features[y_indexes, x_indexes]
-            y_train += [value] * len(x_indexes)
-        x_train = np.concatenate([class2data[m.value] for m in markers])
-        x_train, y_train = shuffle(x_train, y_train, random_state=42)
-
-        if self.informing: print('Fitting model...')
-        self.__model.fit(x_train, y_train)
-
-        #predict
-        if self.informing: print('Making predictions...')
-        preds = self.__model.predict(features.reshape((image.height * image.width, self.n_filters)))
-        preds = np.reshape(preds, (image.height, image.width))
-
-        return Image(data=preds)
+        self.fit(image, markers, features=features)
+        segmented_img = self.predict(image, features=features)
+        return segmented_img
 
 
     def apply_filters(self, image: Image) -> np.ndarray:
