@@ -25,17 +25,18 @@ class Segmentation:
             value = m.value
             x_indexes, y_indexes = m.get_indexes()
             class2data[value] = features[y_indexes, x_indexes]
-            print(f'feature shape = {np.shape(features[y_indexes, x_indexes])}')
+            # print(f'feature shape = {np.shape(features[y_indexes, x_indexes])}')
             y_train += [value] * len(x_indexes)
         
         #print(f'y values = {np.unique(y_train)}')
         x_train = np.concatenate([class2data[m.value] for m in markers])
-        print(f'x_train shape = {np.shape(x_train)}, y_train shape = {np.shape(y_train)}')
+        # print(f'x_train shape = {np.shape(x_train)}, y_train shape = {np.shape(y_train)}')
         x_train, y_train = shuffle(x_train, y_train, random_state=42)
         
         if self.informing: print('Fitting model...')
         self.__model.fit(x_train, y_train)
-        print(f'x_train shape = {np.shape(x_train)}, y_train shape = {np.shape(y_train)}')
+        if self.informing:
+            print(f'x_train shape = {np.shape(x_train)}, y_train shape = {np.shape(y_train)}')
         # if check:
         #     from matplotlib import pyplot as plt
         #     new_data = self.image.data

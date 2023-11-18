@@ -22,7 +22,7 @@ class Segmentation3D:
             image.clear_cache()
             image.load_images(indx_start=0, indx_end=self.batch_size - 1 + self.padding)
             features = self.apply_filters(image)
-            print('features shape = ', np.shape(features))
+            # print('features shape = ', np.shape(features))
         if self.informing: print('Making train data...')
         # get x_train and y_train
         class2data = {}
@@ -31,11 +31,12 @@ class Segmentation3D:
             value = m.value
             x_indexes, y_indexes, z_indexes = m.get_indexes()
             class2data[value] = features[z_indexes, y_indexes, x_indexes]
-            print(f'feature shape = {np.shape(features[z_indexes, y_indexes, x_indexes])}')
+            # print(f'feature shape = {np.shape(features[z_indexes, y_indexes, x_indexes])}')
             y_train += [value] * len(x_indexes)
 
         x_train = np.concatenate([class2data[m.value] for m in markers])
-        print(f'x_train shape = {np.shape(x_train)}, y_train shape = {np.shape(y_train)}')
+        # if self.informing:
+        #     print(f'x_train shape = {np.shape(x_train)}, y_train shape = {np.shape(y_train)}')
         x_train, y_train = shuffle(x_train, y_train, random_state=42)
 
         if self.informing: print('Fitting model...')
