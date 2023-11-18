@@ -1,17 +1,21 @@
-from PIL import Image as IMG
 import numpy as np
-from ..image import Image
+from ..image import Image, Marker
 
 
 
 class Image3D:
     def __init__(self, img_pathes: list[str], batch_size: int = 10) -> None:
-        self.img_pathes = img_pathes
-        self.data = []
+        self.img_pathes = img_pathes.copy()
+        self.data = np.array([[[]]])
         self.__img_indexes  = []
+
         self.batch_number = 0
         self.imges_number = len(self.img_pathes)
         self.batch_size   = min(batch_size, self.imges_number)
+
+        temp_img = Image(path_to_image=self.img_pathes[0])
+        self.__shape = (len(self.img_pathes), temp_img.height, temp_img.width)
+  
 
 
     def load_batch(self, batch_number: int) -> bool:
@@ -24,11 +28,12 @@ class Image3D:
             return False
         
         self.batch_number = batch_number
-        del self.data, self.__img_indexes
-        self.data = [
-            Image(path_to_image=self.img_pathes[i]).data for i in range((self.batch_number - 1) * self.batch_size, last_img_number)
-        ]
-        self.__img_indexes = list(range((self.batch_number - 1) * self.batch_size, last_img_number))
+        self.clear_cache()
+        self.load_images(indx_start=(self.batch_number - 1) * self.batch_size, indx_end=last_img_number - 1)
+        # self.data = [
+        #     Image(path_to_image=self.img_pathes[i]).data for i in range((self.batch_number - 1) * self.batch_size, last_img_number)
+        # ]
+        # self.__img_indexes = list(range((self.batch_number - 1) * self.batch_size, last_img_number))
         assert len(self.data) == len(self.img_indexes), f'{len(self.data)} != {len(self.img_indexes)}'
         return True
 
@@ -37,36 +42,42 @@ class Image3D:
             :param indx: index of 2d image
             :param show_original: if True show original image from directory
         """
-        assert indx < self.imges_number, "Out of range"
+        assert indx < self.__len__(), "Out of range"
         if show_original:
             Image(path_to_image=self.img_pathes[indx]).show()
         else:
-            self.data[indx].show()
+            self[indx].show()
 
 
-    def _load_img(self, indx: int):
-        img_path = self.img_pathes[indx]
-        img = Image(path_to_image=img_path).data
-        # with IMG.open(img_path, 'r') as img:
-        #     img.load()
-        #     img = np.asarray(img, dtype=np.uint8)
-        #     assert len(img.shape) == 2, f'{img.shape} != 2'
-            # print('image shape', img.shape, np.asarray(img, dtype=np.uint8))
-        return img
-    
+    def draw_marker(self, marker: Marker, color: int = 255):
+        
+        marker.draw(self.data, color=color)
 
-    def _load_images(self, indx_start: int, indx_end: int):
+    def load_images(self, indx_start: int, indx_end: int):
         """
-            Load images and images' indexes from indx_start to indx_end.
+            Load images and images' indexes from indx_start to indx_end and append to data.
             Index start from 0
         """
-        self.__img_indexes += list(range(indx_start, indx_end + 1))
-        self.data += [
-            Image(path_to_image=self.img_pathes[i]).data for i in range(indx_start, indx_end + 1)
-        ]
+        self.__img_indexes = list(range(indx_start, indx_end + 1))
+        # self.data = np.concatenate(
+        #     (self.data, [Image(path_to_image=self.img_pathes[i]).data for i in range(indx_start, indx_end + 1)]),
+            
+        #     )
+        self.data = np.array([Image(path_to_image=self.img_pathes[i]).data for i in range(indx_start, indx_end + 1)])
         assert len(self.data) == len(self.img_indexes), f'{len(self.data)} != {len(self.img_indexes)}'
         return True
 
+
+    def clear_cache(self, save_data: bool = False):
+        del self.data, self.__img_indexes
+        self.data = np.array([[[]]])
+        self.__img_indexes = []
+
+
+    @property
+    def shape(self) -> tuple[int, int, int]:
+        return self.__shape
+    
 
     @property
     def len_loaded_images(self) -> int:
@@ -78,6 +89,14 @@ class Image3D:
     def img_indexes(self) -> list[int]:
         return self.__img_indexes.copy()
 
+    
+    def _load_img(self, indx: int):
+        img_path = self.img_pathes[indx]
+        img = Image(path_to_image=img_path).data
+        return img
+
+    def __len__(self) -> int:
+        return self.shape[0]
 
     def __getitem__(self, indx: int) -> Image:
         if indx < 0:

@@ -2,4 +2,6 @@
 __pycache__/
 backend/config/
 .*
-*.ipynb
+
+main.py
+3d_img.py

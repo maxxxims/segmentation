@@ -3,6 +3,7 @@ from backend import Image, Marker, MarkerMakerRectangle2DBinary, Segmentation
 import backend.filters.filters_2dim as filters_2d
 from sklearn.linear_model import LogisticRegression
 
+
 class TestSegmentation:
     path_to_test_image      = r"C:\Users\maxxx\VSprojects\back\0\0\01. Reconstructed\00. Original\im_00001.png"
     path_to_test_image_bad  = r'C:\Users\maxxx\VSprojects\back\0\0\01. Reconstructed\02. Angular Decimation\02. x4\im_00001.png'
@@ -10,8 +11,9 @@ class TestSegmentation:
     path_to_border_img      = r"C:\Users\maxxx\VSprojects\back\0\0\border\border00001.png"
 
     def test_load_image(self):
+        print('IMG WORKING')
         self.image = Image(path_to_image=self.path_to_test_image)
-        assert len(self.image.shape()) == 2
+        assert len(self.image.shape) == 2
 
     # @pytest.mark.parametrize(
     #         'point1, point2',

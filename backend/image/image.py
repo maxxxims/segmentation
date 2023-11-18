@@ -19,6 +19,7 @@ class Image:
                 self.data_raw = np.array(img)
                 self.data = np.copy(self.data_raw)
                 self.max_color = np.max(self.data)
+        
         shape = self.data.shape
         self.__height, self.__width = shape[0], shape[1]
 

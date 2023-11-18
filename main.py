@@ -3,10 +3,9 @@ import matplotlib.pyplot as plt
 from backend.image import Image, Marker, MarkerRectangle2D, MarkerFill2D, MarkerContainer
 from backend.filters import  filters_2dim as filters_2d
 from backend.filters.filters import BaseFilter2D
-from backend.segmentation import SKSegmentation, Segmentation
+from backend.segmentation import Segmentation
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-
 #import .filters.filters_2dim as BaseFilter2D
 
 
@@ -19,14 +18,6 @@ def test_filters(path_to_image: str, show_hist: bool = False):
     image.apply_filter(filters_2d.Threshold(80))
     image.show()
     
-
-def test_segmentation_sk(path_to_image: str):
-    image = Image(path_to_image=path_to_image, dim=2)
-    sgm = SKSegmentation(image)
-    image.show()
-    image.show_segments(MarkerRectangle2D([480, 1595, 581, 1677], 1))
-
-
 def test_segmentation(path_to_image: str):
     # simple img
     # image = Image(data = np.array([[10 * i for i in range(10)] for j in range(5)]))
