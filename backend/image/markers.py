@@ -1,7 +1,12 @@
 import numpy as np
 
-from backend.config import MARKER_TYPES
-from ..config import MARKER_TYPES
+# from backend.config import MARKER_TYPES
+# from ..config import MARKER_TYPES
+
+class MARKER_TYPES:
+    RECTANGLE = 'rectangle'
+    FILL = 'fill'
+    EMPTY = 'empty'
 
 
 class Marker:

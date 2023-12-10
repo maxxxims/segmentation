@@ -1,7 +1,11 @@
-from backend.config import MARKER_TYPES
+# from backend.config import MARKER_TYPES
 from ..image import Image, Marker
 import numpy as np
 
+class MARKER_TYPES:
+    RECTANGLE = 'rectangle'
+    FILL = 'fill'
+    EMPTY = 'empty'
 
 class MarkerPoints3D(Marker):
     def __init__(self, x_indexes: np.ndarray, y_indexes: np.ndarray, z_indexes: np.ndarray,
