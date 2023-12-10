@@ -4,6 +4,7 @@ from ..filters.filters import BaseFilter2D
 import pandas as pd
 from sklearn.utils import shuffle
 from ..image3d import Image3D
+from tqdm.notebook import tqdm
 
 class Segmentation3D:
     def __init__(self, model, filters: list[BaseFilter2D],
@@ -43,11 +44,12 @@ class Segmentation3D:
         self.__model.fit(x_train, y_train)
 
 
+
     def predict(self, image: Image3D, features: np.ndarray = None) -> np.ndarray:
         """
             Segmentate image
         """
-        if not features:
+        if features is None:
             features = self.apply_filters(image)
         if self.informing: print('Making predictions...')
         depth = len(image.data)
@@ -58,23 +60,24 @@ class Segmentation3D:
         return preds
     
 
-    def fit_and_predict(self, image: Image, markers: MarkerContainer) -> Image:
+    def fit_and_predict(self, image: Image3D, markers: MarkerContainer) -> Image:
         features = self.apply_filters(image)
         self.fit(image, markers, features=features)
         segmented_img = self.predict(image, features=features)
-        return Image(data=segmented_img)
+        return segmented_img
 
 
     def apply_filters(self, image: Image) -> np.ndarray:
         if self.informing: print('Appplying filters...')
-        return np.transpose([filter.make_mask(image) for filter in self.__filters], (1, 2, 3, 0))
+        return np.transpose([filter.make_mask(image) for filter in tqdm(self.__filters)], (1, 2, 3, 0))
 
 
     def feature_weights(self) -> np.array:
-        if 'feature_importances_' in dir(self.model):
-            return {key: value for key,value in zip(self.filters_names, self.model.feature_importances_)}
-        elif 'coef_' in dir(self.model):
-            return self.model.coef_
+        if 'feature_importances_' in dir(self.__model):
+            return {key: value for key,value in zip(self.__filters_names, self.__model.feature_importances_)}
+        elif 'coef_' in dir(self.__model):
+            return {f'{self.__filters_names[i]}': self.__model.coef_[0][i] for i in range(len(self.__filters))}
+            # return self.__model.coef_
 
     @property
     def n_filters(self) -> int:

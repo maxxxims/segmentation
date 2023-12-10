@@ -97,4 +97,18 @@ class Image:
         plt.show()
     
 
-    
+    @classmethod
+    def show_images(cls, nrows, ncols, *images, p1=None, p2=None):
+        if p1 is None or p2 is None:
+            p1 = (0, 0)
+            p2 = images[0].shape
+
+        f = plt.figure()
+        for i, img in enumerate(images):
+            f.add_subplot(nrows, ncols, i+1)
+            if isinstance(img, np.ndarray):
+                plt.imshow(img[p1[1]:p2[1], p1[0]:p2[0]], cmap='gray')
+            else:
+                plt.imshow(img.data[p1[1]:p2[1], p1[0]:p2[0]], cmap='gray')
+
+        plt.show()

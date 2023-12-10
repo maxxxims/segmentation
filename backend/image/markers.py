@@ -105,3 +105,13 @@ class MarkerBorder2D(Marker):
         data[self.y_indexes, self.x_indexes] = color
 
     
+
+
+class MarkerByPoints2D(Marker):
+    def __init__(self, x_indexes: list, y_indexes: list, value: int) -> None:
+        super().__init__(value, 2)
+        self.x_indexes = x_indexes
+        self.y_indexes = y_indexes
+
+    def draw(self, data: np.array, color: int = 0) -> None:
+        data[self.y_indexes, self.x_indexes] = color

@@ -3,7 +3,7 @@ from ..image import Image, Marker, MarkerContainer
 from ..filters.filters import BaseFilter2D
 import pandas as pd
 from sklearn.utils import shuffle
-
+from tqdm.notebook import tqdm
 
 class Segmentation:
     def __init__(self, model, filters: list[BaseFilter2D], informing: bool = True) -> None:
@@ -68,16 +68,18 @@ class Segmentation:
 
 
     def apply_filters(self, image: Image) -> np.ndarray:
-        if self.informing: print('Appplying filters...')
-        return np.transpose([filter.make_mask(image) for filter in self.__filters], (1, 2, 0))
-
+        if self.informing: 
+            print('Appplying filters...')
+            return np.transpose([filter.make_mask(image) for filter in tqdm(self.__filters)], (1, 2, 0))
+        else:
+            return np.transpose([filter.make_mask(image) for filter in self.__filters], (1, 2, 0))
 
     def feature_weights(self) -> np.array:
-        if 'feature_importances_' in dir(self.model):
-            return {key: value for key,value in zip(self.filters_names, self.model.feature_importances_)}
-        elif 'coef_' in dir(self.model):
-            return self.model.coef_
-
+        if 'feature_importances_' in dir(self.__model):
+            return {key: value for key,value in zip(self.__filters_names, self.__model.feature_importances_)}
+        elif 'coef_' in dir(self.__model):
+            return {f'{self.__filters_names[i]}': self.__model.coef_[0][i] for i in range(len(self.__filters))}
+            # return self.__model.coef_
     @property
     def n_filters(self) -> int:
         return len(self.__filters)  

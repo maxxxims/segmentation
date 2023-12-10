@@ -1,3 +1,2 @@
-from .base_metric import BaseMetric
-from .accuracy import Accuracy
-from .evaluator import Evaluator
+from .base_metrics import BaseMetric, Accuracy
+from .evaluator import Evaluator, Evaluator3D
