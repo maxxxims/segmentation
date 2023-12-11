@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  segmentation:
+    build: .
+    command: python3 -m GUI.server
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "8050:8050"
