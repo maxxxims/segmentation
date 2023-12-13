@@ -35,7 +35,7 @@ def parse_path_to_save(path_to_save: str, file_name: str):
         dir =  f'result{numbers[-1] + 1}'
     path_to_result_file = os.path.join(path_to_save, dir)
     os.mkdir(path_to_result_file)
-    return path_to_result_file, os.path.join(path_to_result_file, file_name)
+    return path_to_result_file#, os.path.join(path_to_result_file, file_name)
 
 
 def save_annotation(img: np.ndarray, data: dict,  data_json: dict,
@@ -49,7 +49,8 @@ def save_annotation(img: np.ndarray, data: dict,  data_json: dict,
     select = stencil == MASK_VALUE
     select_bg = stencil != MASK_VALUE
 
-    path_to_result_folder, png_save_path = parse_path_to_save(path_to_save, file_name)
+    path_to_result_folder = parse_path_to_save(path_to_save, file_name)
+    png_save_path = os.path.join(path_to_result_folder, f'{data_json["image_tag"]}.png')
     print(png_save_path)
 
     # save png
@@ -58,12 +59,15 @@ def save_annotation(img: np.ndarray, data: dict,  data_json: dict,
     plt.imsave(png_save_path, annotated_img, cmap='gray')
 
     # save json
-    json_save_path = png_save_path.replace('.png', '.json')
+    #json_save_path = png_save_path.replace('.png', '.json')
+    json_save_path = os.path.join(path_to_result_folder, 'result.json')
+    
     y_1_class, x_1_class = np.where(select)
     y_0_class, x_0_class = np.where(select_bg)
     shape0, shape1 = stencil.shape[0], stencil.shape[1]
 
     data_for_save = {
+        'shapes': data,
         "y_1_class": y_1_class.tolist(),
         "x_1_class": x_1_class.tolist(),
         "y_0_class": y_0_class.tolist(),

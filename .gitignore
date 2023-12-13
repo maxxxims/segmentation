@@ -3,8 +3,10 @@
 __pycache__/
 backend/config/
 .*
+*.npy
 
 main.py
 3d_img.py
 
 !.empty
+!GUI/static/*.png

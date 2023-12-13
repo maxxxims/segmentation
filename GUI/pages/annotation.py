@@ -15,7 +15,7 @@ dash.register_page(__name__, path = '/annotation')
 default_figure = 255 * np.ones((200, 200, 3))
 
 fig = px.imshow(default_figure, binary_string=True, width=800, height=800)
-fig.update_layout(dragmode="drawclosedpath")
+fig.update_layout(dragmode="drawopenpath")
 
 config = {
     "modeBarButtonsToAdd": [
@@ -28,7 +28,7 @@ config = {
     ]
 }
 
-# Build App
+
 layout = html.Div(
     [   
         html.Div(
@@ -74,20 +74,18 @@ def show_image(n_clicks, figure, slider_value):
         if dash.get_app().last_figure is not None:
             return dash.get_app().last_figure
         fig = px.imshow(dash.get_app().image.data, binary_string=True, width=slider_value)#, height=800)
-        fig.update_layout(dragmode="drawclosedpath")
+        fig.update_layout(dragmode="drawopenpath")
         return fig
         
     else:
         return no_update
 
-# from pprint import pprint
+
 
 @callback(
-    # Output("annotations-data-pre", "children"),
     Output('text-marked-segments', 'children'),
     Input("graph-pic", "relayoutData"),
     State("graph-pic", "figure"),
-    # prevent_initial_call=True,
 )
 def on_new_annotation(relayout_data, figure):
     if relayout_data is not None:
@@ -98,7 +96,6 @@ def on_new_annotation(relayout_data, figure):
                 dash.get_app().__setattr__('markers_class_1', None)
             dash.get_app().markers_class_1 = makrers_data
 
-            # pprint(dash.get_app().markers_class_1)
 
     # return number of marked segments
     if hasattr(dash.get_app(), 'markers_class_1') and dash.get_app().last_figure is not None:

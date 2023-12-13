@@ -1,21 +1,19 @@
-# import dash
-# from dash import Dash, html, dcc, Output, Input, callback
-# from flask import redirect
+import dash
+from dash import Dash, html, dcc, Output, Input, callback
+from flask import redirect
 
 
-# dash.register_page(__name__, path = '/')
+dash.register_page(__name__, path = '/')
 
 
-# layout = html.Div([html.Div(
-#     id='start-page-text', children='Start page'),
-#     dcc.Input(id='hidden-text', value = 'text', style={"display": "none"}),
+layout = html.Div(id="page-content", children=[
+        html.P(children=[
+            html.Span("Welcome to Image Annotations Tools for Semantic Segmentation. Instructions can be found on the "),
+            html.A("Tutorial", href='/tutorial'), 
+            html.Span(" page or you can start from the "),
+            html.A("Upload File", href='/upload_file '), html.Span(" page."),
 
-#     ])
-
-
-# # @callback(
-# #     Output('start-page-text', 'children'),
-# #     Input('hidden-text', 'value'),
-# # )
-# # def redirect_to_upload(value):
-# #     return redirect('/upload_file')
+        ], style={'text-align': 'center', 'font-size': '20pt', 'margin-bottom': '20px'}
+        
+        )
+    ]),
