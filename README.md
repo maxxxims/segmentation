@@ -32,3 +32,4 @@ The application will be available at the default url
 #
 #
 
+![example](https://github.com/maxxxims/segmentation/blob/main/GUI/static/step2.png)
