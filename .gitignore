@@ -4,6 +4,7 @@ __pycache__/
 backend/config/
 .*
 *.npy
+data/output/result*
 
 main.py
 3d_img.py
