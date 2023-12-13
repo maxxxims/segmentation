@@ -7,12 +7,12 @@
     cd segmentation
     docker-compose up --build
 ```
-2) Variant 2 using python (py/python3). The required version of Python>=3.10
+2) Variant 2 using python3 (py/python). The required version of Python>=3.10
 ```
     git clone https://github.com/maxxxims/segmentation.git
     cd segmentation
-    pip freeze -r "requirements.txt"
-    python -m GUI.server
+    pip3 install -r "requirements.txt"
+    python3 -m GUI.server
 ```
 #
 ### Open the app
