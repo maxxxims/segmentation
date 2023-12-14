@@ -1,7 +1,6 @@
 import dash
 from dash import Dash, html, dcc, Output, Input
 from .callbacks import on_new_annotation
-from .program.programm import Programm
 from flask import redirect, Flask, render_template
 
 

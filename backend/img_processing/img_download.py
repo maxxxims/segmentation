@@ -30,9 +30,14 @@ def download_array(url):
 
 
 
+
+
+
+
 def parse_json_file(data: dict) -> Image:
     original_image_path  = os.path.join('data', 'input', data['image_tag'] + '.npy')
     annotated_image_path = os.path.join('data', 'input', data['image_tag'] + '_annotated.npy')
+    """
     if data['image_tag'] + '.npy' not in os.listdir(os.path.join('data', 'input')):
         print(f'Download original image...')
         original_image  = requests.get(ADDED_URL + data['original_image_url'] ).content
@@ -44,7 +49,7 @@ def parse_json_file(data: dict) -> Image:
             f.write(annotated_image)
     else:
         print('Image found in cash...')
-
+    """
     img = Image(data=np.load(original_image_path))
     return img
     
