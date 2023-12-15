@@ -5,7 +5,7 @@ import json
 import matplotlib.pyplot as plt
 import dash
 from PIL import Image as IMG
-from backend import Image, draw_annotations, save_annotation, check_annotation
+from backend import Image, draw_annotations, save_annotation, check_annotation, draw_annotated_image
 import numpy as np
 
 dash.register_page(__name__, path = '/annotation_background')
@@ -91,7 +91,8 @@ def show_image(n_clicks, figure):
     if hasattr(dash.get_app(), 'last_figure'):
         if dash.get_app().last_figure is not None:
             data = dash.get_app().markers_class_1
-            img_annotated, img = draw_annotations(_img=dash.get_app().image.data, data=data, reverse=True)
+            # img_annotated, img = draw_annotations(_img=dash.get_app().image.data, data=data, reverse=True)
+            img_annotated = draw_annotated_image(_img=dash.get_app().image.data, data=data, selected_class=dash.get_app().state_dict['selected_class'])
             fig = px.imshow(img_annotated, binary_string=True, width=800, height=800)
             fig.update_layout(dragmode="drawclosedpath")
             return fig, len(dash.get_app().markers_class_1)
@@ -142,7 +143,7 @@ def check_annotation_img(n_clicks):
         if hasattr(dash.get_app(), 'markers_class_1'):
             n_segments = len(dash.get_app().markers_class_1)
 
-        metrics, img = check_annotation(dash.get_app().json_data, 
+        metrics, img = check_annotation(dash.get_app().json_data, selected_color=dash.get_app().state_dict['selected_class'],
                                         save_acc=True, path_to_save=dash.get_app().path_to_save,
                                         n_segments=n_segments)
         
@@ -152,7 +153,7 @@ def check_annotation_img(n_clicks):
         return html.Div(
             [
                 # html.H3(f"Accuracy = {metrics['Accuracy']}"),
-                html.P("""In the image below, places with incorrect segmentation are marked in white.
+                html.P("""In the image below the same as you've saved now.
                         To remove this image, click again "CHEK ANNOTATION" """),
                 dcc.Graph(figure=fig)
             ]

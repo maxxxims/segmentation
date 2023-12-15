@@ -3,13 +3,46 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 from svg.path import parse_path, path
+from .save_annotation import draw_pathes as draw_pathes_another, MASK_VALUE
+
 
 N_POINTS = int(1e3)
 ANNOTATION_COLOR = (0, 255, 0, 0)
 
 ANNOTATION_COLOR_BG = (150, 10, 0, 0)
 
-MASK_VALUE = 255
+# MASK_VALUE = 255
+
+
+
+
+def draw_annotated_image(_img: np.ndarray, data: dict, selected_class: int) -> np.ndarray:
+    """
+        data: selected_markers_   - array with pathes
+    """
+    selected_class = int(selected_class)
+    img = np.copy(_img)
+
+    data_pathes = []
+    for el in data:
+        if el["type"] == "path":
+            data_pathes.append(el)
+
+
+    stencil = draw_pathes_another(img, data_pathes)
+    if selected_class == 1:
+        select = stencil == MASK_VALUE
+        select_bg = stencil != MASK_VALUE
+
+    else:
+        select = stencil != MASK_VALUE
+        select_bg = stencil == MASK_VALUE
+    
+    annotated_img = np.zeros((img.shape[0], img.shape[1]))
+    annotated_img[select] = 255
+
+    return annotated_img
+
 
 
 def draw_annotations(_img: np.ndarray, data: dict, reverse: bool = False):
@@ -70,9 +103,9 @@ def draw_pathes(_img: np.ndarray, data: list[dict], reverse: bool = False):
     contour = np.array(contour)
 
     stencil = np.zeros(img.shape[:2], dtype=np.uint8)
-    # cv2.fillPoly(stencil, pts=contour, color=MASK_VALUE)
     for cnt in contour:
-        cv2.fillPoly(stencil, pts=[cnt], color=MASK_VALUE)
+        #cv2.drawContours(stencil, cnt, contourIdx=-1, color=MASK_VALUE,thickness=cv2.FILLED)
+        cv2.fillPoly(stencil, pts=[cnt], color=MASK_VALUE) #, fillrule='nonzero'
     if not reverse:
         select = stencil == MASK_VALUE
         img[select] = ANNOTATION_COLOR

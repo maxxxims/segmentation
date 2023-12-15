@@ -19,9 +19,6 @@ next_step_button = {
 }
 
 layout = html.Div([
-    # html.Button(id='button-next-step1', style=next_step_button,
-    #             children=[html.A("NEXT_STEP", href='/annotation')]),
-
     html.Div(id='output-image-upload-default'),
     dcc.Upload(
         id='upload-image',
@@ -52,34 +49,20 @@ layout = html.Div([
 
 
 
-
-# def parse_contents(contents, filename, date):
-#     return html.Div([
-#         html.H5(filename),
-#         html.H6(datetime.datetime.fromtimestamp(date)),
-
-#         # HTML images accept base64 encoded strings in the same format
-#         # that is supplied by the upload
-#         html.Img(src=contents, style={'height': '50%', 'width': 'auto', 'align': 'center'}),
-#         html.Hr(),
-#         html.Div('Raw Content'),
-#         html.Pre(contents[0:200] + '...', style={
-#             'whiteSpace': 'pre-wrap',
-#             'wordBreak': 'break-all'
-#         })
-#     ])
-
-def show_image(image_data):
+def show_image(image_data, file_name: str):
     fig = px.imshow(image_data, binary_string=True, width=400, height=400)
     fig.update_layout(dragmode="drawclosedpath")
     return html.Div([
             html.H3('Uploaded image', style={'text-align': 'center'}),
+            html.Div(children=[
+                html.B(f'Filename: '), html.Span(file_name),
+            ], style={'text-align': 'center'}),
             html.Div(
                 [html.Img(src=IMG.fromarray(dash.get_app().image.data))], style={'display': 'flex',
                                                                                   'justify-content': 'center',
                                                                                   'margin-bottom': '20px'}
             )
-            # dcc.Graph(id="graph-pic", figure=fig, style={'align': 'center'})
+
         ], )
 
 
@@ -108,19 +91,19 @@ def upload_file(content, file_name:str, list_of_dates):
     if content is not None:
         if file_name.endswith('.json'):
             load_image_from_json(content, file_name)
+            dash.get_app().state_dict['start_annotation'] = False
 
         else:
             return html.Div([
                 html.H3('Uploaded file should be in .json format', style={'text-align': 'center',
                                                                           'color': 'red'}),
             ])
-
         dash.get_app().__setattr__('last_figure', None)
-        
-
 
     if hasattr(dash.get_app(), 'image'):
         next_step_button['display'] = 'block'
-        return show_image(dash.get_app().image.data)#, next_step_button
+        if file_name is None and hasattr(dash.get_app(), 'json_data'):
+            file_name = dash.get_app().json_data['image_tag'] + '.json'
+        return show_image(dash.get_app().image.data, file_name)#, next_step_button
     
     return no_update

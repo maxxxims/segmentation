@@ -38,7 +38,7 @@ def parse_path_to_save(path_to_save: str, file_name: str):
     return path_to_result_file#, os.path.join(path_to_result_file, file_name)
 
 
-def save_annotation(img: np.ndarray, data: dict,  data_json: dict,
+def save_annotation(img: np.ndarray, data: dict,  data_json: dict, selected_class: int = 1,
                     file_name: str = 'result.png', path_to_save: str = os.path.join('data', 'output')) -> str:
     data_pathes = []
     for el in data:
@@ -46,8 +46,13 @@ def save_annotation(img: np.ndarray, data: dict,  data_json: dict,
             data_pathes.append(el)
 
     stencil = draw_pathes(img, data_pathes)
-    select = stencil == MASK_VALUE
-    select_bg = stencil != MASK_VALUE
+    if selected_class == 1:
+        select = stencil == MASK_VALUE
+        select_bg = stencil != MASK_VALUE
+
+    else:
+        select = stencil != MASK_VALUE
+        select_bg = stencil == MASK_VALUE
 
     path_to_result_folder = parse_path_to_save(path_to_save, file_name)
     png_save_path = os.path.join(path_to_result_folder, f'{data_json["image_tag"]}.png')
@@ -88,6 +93,9 @@ def save_annotation(img: np.ndarray, data: dict,  data_json: dict,
 
 
 def draw_pathes(_img: np.ndarray, data: list[dict]):
+    """
+        fill polygons with MASK_VALUE
+    """
     img = np.copy(_img)
     n_polygons = len(data)
     pathes_arr = [parse_path(data[j]["path"]) for j in range(n_polygons)]
@@ -111,11 +119,13 @@ def draw_pathes(_img: np.ndarray, data: list[dict]):
 
 
 
-def check_annotation(data: dict, save_acc: bool = False, path_to_save: bool = False, n_segments: int = -1):
+def check_annotation(data: dict, selected_color: int, save_acc: bool = False,
+                      path_to_save: bool = False, n_segments: int = -1):
     """
     :param data: json file with annotation to download file
     :param annotated_json_file_name: name of annotated file
     """
+    selected_color = int(selected_color)
     ground_truth_path = os.path.join('data',   'input',  f'{data["image_tag"]}_annotated.npy')
     original_img_path = os.path.join('data',   'input',  f'{data["image_tag"]}.npy')
 
@@ -127,8 +137,13 @@ def check_annotation(data: dict, save_acc: bool = False, path_to_save: bool = Fa
     original_img     = Image(data=np.load(original_img_path))
     print(f'{ground_truth_img.data.shape}, {original_img.data.shape}')
 
-    original_img.data[data['y_1_class'], data['x_1_class']] = 255
-    original_img.data[data['y_0_class'], data['x_0_class']] = 0
+    if selected_color == 1:
+        original_img.data[data['y_1_class'], data['x_1_class']] = 255
+        original_img.data[data['y_0_class'], data['x_0_class']] = 0
+
+    else:
+        original_img.data[data['y_1_class'], data['x_1_class']] = 0
+        original_img.data[data['y_0_class'], data['x_0_class']] = 255
 
 
     # markers_class_1 = MarkerByPoints2D(x_indexes=data['x_1_class'], y_indexes=data['y_1_class'])
@@ -146,4 +161,5 @@ def check_annotation(data: dict, save_acc: bool = False, path_to_save: bool = Fa
         with open(os.path.join(path_to_save, 'result.json'), 'w') as f:
             json.dump(data, f, indent=4)
 
-    return acc, diffrence    
+    #return acc, diffrence  
+    return acc, original_img
