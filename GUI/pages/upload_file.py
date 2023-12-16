@@ -99,6 +99,7 @@ def upload_file(content, file_name:str, list_of_dates):
                                                                           'color': 'red'}),
             ])
         dash.get_app().__setattr__('last_figure', None)
+        dash.get_app().__setattr__('markers_class_1', [])
 
     if hasattr(dash.get_app(), 'image'):
         next_step_button['display'] = 'block'

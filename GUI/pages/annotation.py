@@ -66,7 +66,7 @@ layout = html.Div(
                           options=get_options()
                       ),
                       
-                      #html.Button("Change class", id="button-img-change-class", n_clicks=0, style={'margin-left': '5%'}),
+                    #   html.Button("load img =", id="button-load-img", n_clicks=0, style={'margin-left': '5%'}),
                       html.Span(children='', id='warning-msg-selector', style={'color': 'red'}),
                       ],
             style={'margin-left': '5%', 'font-size': '20px', 'width': '25%'}
@@ -98,60 +98,6 @@ layout = html.Div(
     ]
 )
 
-
-
-@callback(
-    Output('graph-pic', 'figure'),
-    Input('button-img-show', 'n_clicks'),
-    State("graph-pic", "figure"),       
-    Input("slider-img-size", "value"),
-    # prevent_initial_call=True
-)
-def show_image(n_clicks, figure, slider_value):
-    
-    # if ctx.triggered_id == 'slider-img-size' and hasattr(dash.get_app(), 'last_figure'):
-    #     print(dash.get_app().last_figure.keys())
-    #     fig = px.imshow(dash.get_app().image.data, binary_string=True, width=slider_value)#, height=800)
-    #     fig.update_layout(dragmode="drawclosedpath")
-    #     return fig
-    if hasattr(dash.get_app(), 'image'):
-        if dash.get_app().last_figure is not None:
-            return dash.get_app().last_figure
-        fig = px.imshow(dash.get_app().image.data, binary_string=True, width=800)#, height=800)
-        fig.update_layout(dragmode="drawopenpath", 
-                    newshape=NEWSHAPE)
-        
-        return fig
-        
-    else:
-        return no_update
-
-
-
-@callback(
-    Output('text-marked-segments', 'children'),
-    Input("graph-pic", "relayoutData"),
-    State("graph-pic", "figure"),
-    
-)
-def on_new_annotation(relayout_data, figure):
-    # add annotations
-    if relayout_data is not None:
-        if "shapes" in relayout_data and hasattr(dash.get_app(), 'image'):
-            dash.get_app().state_dict['start_annotation'] = True    # start annotating
-            dash.get_app().__setattr__('last_figure', figure)
-            makrers_data = relayout_data["shapes"] 
-            if not hasattr(dash.get_app(), 'markers_class_1'):
-                dash.get_app().__setattr__('markers_class_1', None)
-            dash.get_app().markers_class_1 = makrers_data
-
-
-    # return number of marked segments
-    if hasattr(dash.get_app(), 'markers_class_1') and dash.get_app().last_figure is not None:
-        return len(dash.get_app().markers_class_1)
-    else:
-        return 0
-    
 
 @callback(
     Output('dropdown-selected-class', 'options'),
@@ -187,12 +133,12 @@ def show_preview(n_clicks1, n_clicks2):
     if hasattr(dash.get_app(), 'image') and hasattr(dash.get_app(), 'markers_class_1'):
         reverse = False
         if ctx.triggered_id == 'button-img-fill-class-1':
-            if dash.get_app().state_dict['selected_class'] == '1':
+            if int(dash.get_app().state_dict['selected_class']) == 1:
                 reverse = False
             else:
                 reverse = True
         elif ctx.triggered_id == 'button-img-fill-bg':
-            if dash.get_app().state_dict['selected_class'] == '1':
+            if int(dash.get_app().state_dict['selected_class']) == 1:
                 reverse = True
             else:
                 reverse = False
@@ -200,42 +146,132 @@ def show_preview(n_clicks1, n_clicks2):
 
         img_add, img = draw_annotations(dash.get_app().image.data, dash.get_app().markers_class_1, reverse=reverse)
         fig = px.imshow(img_add, binary_string=True, width=800, height=800)
-
+        # print()
         return fig
     else:
         return no_update
-"""
+    
+
 
 
 @callback(
     Output('graph-pic', 'figure'),
     Output('text-marked-segments', 'children'),
-    Input('button-img-show', 'n_clicks'),
-    # Input("slider-img-size", "value"),
     Input("graph-pic", "relayoutData"),
     State("graph-pic", "figure"),
     # prevent_initial_call=True
+    
 )
-def graph_control(n_clicks, relayout_data, figure):
-    n_marked_classes = 0
-    if hasattr(dash.get_app(), 'markers_class_1') and dash.get_app().last_figure is not None:
-        n_marked_classes = len(dash.get_app().markers_class_1)
+def on_new_annotation(relayout_data,figure):
+    # print(figure.keys(), type(figure['data'][0]['source']), figure['data'][0].keys())
+    # # print((figure['data'][0]['source']))
+    # import base64
+    # decoded = base64.b64decode(figure['data'][0]['source'].split(',')[1])
+    # print(list(decoded))
+    # print()
 
 
+    # initial call
+    if ctx.triggered_id is None:
+        if not hasattr(dash.get_app(), 'image'):
+            return get_figure(default_figure), 0
+        if dash.get_app().last_figure is not None:
+            return dash.get_app().last_figure, 0
+        if dash.get_app().last_figure is None and hasattr(dash.get_app(), 'image'):
+            fig = px.imshow(dash.get_app().image.data, binary_string=True, width=800)#, height=800)
+            fig.update_layout(dragmode="drawopenpath", 
+                        newshape=NEWSHAPE)
+            dash.get_app().__setattr__('markers_class_1', [])
+            return fig, 0
+        print('Situation unexpected.')
+        return get_figure(default_figure), 0
+    
+    print(relayout_data)
+    if relayout_data is not None and hasattr(dash.get_app(), 'image'):
+        resize_arr = [key for key in relayout_data.keys() if '.path' in key]
+        if len(resize_arr) != 0:
+            for el in resize_arr:
+                new_geometry = relayout_data[el]
+                idx_old = int(el[1+el.find('['):el.find(']')])
+                dash.get_app().markers_class_1[idx_old]['path'] = new_geometry
+
+        elif "shapes" in relayout_data:
+            dash.get_app().state_dict['start_annotation'] = True
+            dash.get_app().__setattr__('last_figure', figure)
+            makrers_data = relayout_data["shapes"] 
+            dash.get_app().markers_class_1 = makrers_data
+
+    # define figure
+    figure_to_return = figure
+    if hasattr(dash.get_app(), 'last_figure'):
+        if dash.get_app().last_figure is None:
+            figure_to_return = px.imshow(dash.get_app().image.data, binary_string=True, width=800)#, height=800)
+            figure_to_return.update_layout(dragmode="drawopenpath", newshape=NEWSHAPE)
+
+
+    n_marked = 0
+    if hasattr(dash.get_app(), 'markers_class_1'):
+        n_marked = len(dash.get_app().markers_class_1)
+
+    print('Situation unexpected x2.')
+    return figure_to_return, n_marked
+
+
+
+
+"""
+
+@callback(
+    Output('graph-pic', 'figure'),
+    Input('button-img-show', 'n_clicks'),
+    State("graph-pic", "figure"),       
+    Input("slider-img-size", "value"),
+    # prevent_initial_call=True
+)
+def show_image(n_clicks, figure, slider_value):
+    print(f'SHOW IMAGE. ctx.triggered_id = {ctx.triggered_id} \n')
+    # if ctx.triggered_id == 'slider-img-size' and hasattr(dash.get_app(), 'last_figure'):
+    #     print(dash.get_app().last_figure.keys())
+    #     fig = px.imshow(dash.get_app().image.data, binary_string=True, width=slider_value)#, height=800)
+    #     fig.update_layout(dragmode="drawclosedpath")
+    #     return fig
+    if hasattr(dash.get_app(), 'image'):
+        if dash.get_app().last_figure is not None:
+            #print(dash.get_app().last_figure.keys(), dash.get_app().last_figure['data'])
+            return dash.get_app().last_figure
+        fig = px.imshow(dash.get_app().image.data, binary_string=True, width=800)#, height=800)
+        fig.update_layout(dragmode="drawopenpath", 
+                    newshape=NEWSHAPE)
+        
+        return fig
+        
+    else:
+        return no_update
+
+
+
+@callback(
+    Output('text-marked-segments', 'children'),
+    Input("graph-pic", "relayoutData"),
+    State("graph-pic", "figure"),
+    
+)
+def on_new_annotation(relayout_data, figure):
+    # add annotations
+    print(f'ON NEW ANNOTATION. ctx.triggered_id = {ctx.triggered_id} \n')
     if relayout_data is not None:
         if "shapes" in relayout_data and hasattr(dash.get_app(), 'image'):
+            dash.get_app().state_dict['start_annotation'] = True    # start annotating
             dash.get_app().__setattr__('last_figure', figure)
             makrers_data = relayout_data["shapes"] 
             if not hasattr(dash.get_app(), 'markers_class_1'):
                 dash.get_app().__setattr__('markers_class_1', None)
             dash.get_app().markers_class_1 = makrers_data
 
-    if hasattr(dash.get_app(), 'last_figure'):
-        if dash.get_app().last_figure is not None:
-            return dash.get_app().last_figure, n_marked_classes
-    fig = px.imshow(dash.get_app().image.data, binary_string=True)
-    fig.update_layout(dragmode="drawclosedpath")
-    return  fig, n_marked_classes
 
-# Решить проблему с обновлением фигур
+    # return number of marked segments
+    if hasattr(dash.get_app(), 'markers_class_1') and dash.get_app().last_figure is not None:
+        return len(dash.get_app().markers_class_1)
+    else:
+        return 0
 """
