@@ -138,14 +138,15 @@ def check_annotation(data: dict, selected_color: int, save_acc: bool = False,
     print(f'{ground_truth_img.data.shape}, {original_img.data.shape}')
 
     if selected_color == 1:
-        original_img.data[data['y_1_class'], data['x_1_class']] = 255
+        original_img.data[data['y_1_class'], data['x_1_class']] = 1
         original_img.data[data['y_0_class'], data['x_0_class']] = 0
 
     else:
         original_img.data[data['y_1_class'], data['x_1_class']] = 0
-        original_img.data[data['y_0_class'], data['x_0_class']] = 255
+        original_img.data[data['y_0_class'], data['x_0_class']] = 1
 
-
+    ground_truth_img.data[ground_truth_img.data > 0] = 1
+ 
     # markers_class_1 = MarkerByPoints2D(x_indexes=data['x_1_class'], y_indexes=data['y_1_class'])
     # markers_class_0 = MarkerByPoints2D(x_indexes=data['x_0_class'], y_indexes=data['y_0_class'])
 

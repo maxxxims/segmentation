@@ -104,6 +104,7 @@ def draw_pathes(_img: np.ndarray, data: list[dict], reverse: bool = False):
 
     stencil = np.zeros(img.shape[:2], dtype=np.uint8)
     for cnt in contour:
+        cv2.NONE_POLISHER
         #cv2.drawContours(stencil, cnt, contourIdx=-1, color=MASK_VALUE,thickness=cv2.FILLED)
         cv2.fillPoly(stencil, pts=[cnt], color=MASK_VALUE) #, fillrule='nonzero'
     if not reverse:

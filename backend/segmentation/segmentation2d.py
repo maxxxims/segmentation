@@ -3,7 +3,8 @@ from ..image import Image, Marker, MarkerContainer
 from ..filters.filters import BaseFilter2D
 import pandas as pd
 from sklearn.utils import shuffle
-from tqdm.notebook import tqdm
+# from tqdm.notebook import tqdm
+from tqdm import tqdm
 
 class Segmentation:
     def __init__(self, model, filters: list[BaseFilter2D], informing: bool = True) -> None:

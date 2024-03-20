@@ -1,8 +1,11 @@
 *.png
 *.gif
 __pycache__/
+.ipynb_checkpoints/
 backend/config/
 .*
+**.ipynb
+**.csv
 
 
 main.py
