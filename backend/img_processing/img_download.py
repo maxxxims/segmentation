@@ -34,7 +34,7 @@ def download_array(url):
 
 
 
-def parse_json_file(data: dict) -> Image:
+def parse_json_file(data: dict, test: bool = False) -> Image:
     original_image_path  = os.path.join('data', 'input', data['image_tag'] + '.npy')
     annotated_image_path = os.path.join('data', 'input', data['image_tag'] + '_annotated.npy')
     """
@@ -50,6 +50,9 @@ def parse_json_file(data: dict) -> Image:
     else:
         print('Image found in cash...')
     """
+    if test:
+        return np.load(original_image_path)
+
     img = Image(data=np.load(original_image_path))
     return img
     

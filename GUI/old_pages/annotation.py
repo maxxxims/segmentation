@@ -8,9 +8,6 @@ from PIL import Image as IMG
 from backend import Image
 import numpy as np
 from backend import draw_annotations
-from GUI.database import session_table, image_table, figure_table
-from flask import request
-import json
 
 
 dash.register_page(__name__, path = '/annotation')
@@ -55,52 +52,52 @@ config = {
     ]
 }
 
-def layout():
-    layout = html.Div(
-        [   
+
+layout = html.Div(
+    [   
+        html.Div(
+            id='text-under-button',
+            children=[html.B(children="Marked segments: "),
+                      html.Span(children='0', id="text-marked-segments"), html.Br(),
+                      html.B(children="Selected class: "),
+                      html.Span(children='', id="text-selected-class"),
+                      dcc.Dropdown(
+                          id="dropdown-selected-class",
+                          options=get_options()
+                      ),
+                      
+                    #   html.Button("load img =", id="button-load-img", n_clicks=0, style={'margin-left': '5%'}),
+                      html.Span(children='', id='warning-msg-selector', style={'color': 'red'}),
+                      ],
+            style={'margin-left': '5%', 'font-size': '20px', 'width': '25%'}
+        ),
+        html.Button("Show image", id="button-img-show", n_clicks=0, style={'display': 'none'}),
+
+        html.Div(id="container-img", children=[   #style={'widhth': '800px', 'height': 'auto'},
+            dcc.Graph(id="graph-pic", figure=fig, config=config, ),
             html.Div(
-                id='text-under-button',
-                children=[html.B(children="Marked segments: "),
-                        html.Span(children='0', id="text-marked-segments"), html.Br(),
-                        html.B(children="Selected class: "),
-                        html.Span(children='', id="text-selected-class"),
-                        dcc.Dropdown(
-                            id="dropdown-selected-class",
-                            options=get_options()
-                        ),
-                        
-                        #   html.Button("load img =", id="button-load-img", n_clicks=0, style={'margin-left': '5%'}),
-                        html.Span(children='', id='warning-msg-selector', style={'color': 'red'}),
-                        ],
-                style={'margin-left': '5%', 'font-size': '20px', 'width': '25%'}
+                style={'justify-content': 'center'},
+                children=[
+                    html.Button(children="Fill Background", id="button-img-fill-bg", n_clicks=0, style={ 'align': 'center'}),
+                    html.Button(children="Fill Class 1", id="button-img-fill-class-1", n_clicks=0, style={ 'align': 'center'}),
+                    html.H3('Annotated Image Preview', style={'text-align': 'center'}),
+                ]
             ),
-            html.Button("Show image", id="button-img-show", n_clicks=0, style={'display': 'none'}),
-
-            html.Div(id="container-img", children=[   #style={'widhth': '800px', 'height': 'auto'},
-                dcc.Graph(id="graph-pic", figure=fig, config=config, ),
-                html.Div(
-                    style={'justify-content': 'center'},
-                    children=[
-                        html.Button(children="Fill Background", id="button-img-fill-bg", n_clicks=0, style={ 'align': 'center'}),
-                        html.Button(children="Fill Class 1", id="button-img-fill-class-1", n_clicks=0, style={ 'align': 'center'}),
-                        html.H3('Annotated Image Preview', style={'text-align': 'center'}),
-                    ]
-                ),
-                
-                dcc.Graph(id="preview-annotated", figure=fig, config={}),
-                html.Pre(id="annotations-data-pre"),
-
-            ]), #'justify-content': 'center', 'margin-bottom': '20px' style={'display': 'flex', }
             
+            dcc.Graph(id="preview-annotated", figure=fig, config={}),
+            html.Pre(id="annotations-data-pre"),
 
-            html.Div(id='container-slider-img-size', children=[
-                html.P('Set image size'),
-                dcc.Slider(100, 2000, marks=None, value=200, id='slider-img-size'),
-            ], style={'margin-left': '5%', 'font-size': '20px', 'width': '25%'})
-            
-        ]
-    )
-    return layout
+        ]), #'justify-content': 'center', 'margin-bottom': '20px' style={'display': 'flex', }
+        
+
+        html.Div(id='container-slider-img-size', children=[
+            html.P('Set image size'),
+            dcc.Slider(100, 2000, marks=None, value=200, id='slider-img-size'),
+        ], style={'margin-left': '5%', 'font-size': '20px', 'width': '25%'})
+        
+    ]
+)
+
 
 @callback(
     Output('dropdown-selected-class', 'options'),
@@ -109,7 +106,6 @@ def layout():
     Input('dropdown-selected-class', 'value'),
 )
 def change_selected_class(value):
-    return no_update
     # change options if start annotating
     if dash.get_app().state_dict.get('start_annotation', False):
         options = get_options()
@@ -127,18 +123,13 @@ def change_selected_class(value):
     return options, dash.get_app().state_dict['selected_class'], warning_msg
 
 
-"""
+
 @callback(
     Output('preview-annotated', 'figure'),
     Input('button-img-fill-bg', 'n_clicks'),
     Input('button-img-fill-class-1', 'n_clicks'),
 )
 def show_preview(n_clicks1, n_clicks2):
-    username = request.authorization['username']    
-    if session_table.is_loaded_image(username=username):
-        ...
-    return no_update
-    
     if hasattr(dash.get_app(), 'image') and hasattr(dash.get_app(), 'markers_class_1'):
         reverse = False
         if ctx.triggered_id == 'button-img-fill-class-1':
@@ -160,7 +151,8 @@ def show_preview(n_clicks1, n_clicks2):
     else:
         return no_update
     
-"""
+
+
 
 @callback(
     Output('graph-pic', 'figure'),
@@ -171,73 +163,15 @@ def show_preview(n_clicks1, n_clicks2):
     
 )
 def on_new_annotation(relayout_data,figure):
+    # print(figure.keys(), type(figure['data'][0]['source']), figure['data'][0].keys())
+    # # print((figure['data'][0]['source']))
+    # import base64
+    # decoded = base64.b64decode(figure['data'][0]['source'].split(',')[1])
+    # print(list(decoded))
+    # print()
+
+
     # initial call
-    username = request.authorization['username']
-    print()
-    print()
-    # print(f'figure = {figure}')
-    # print(f'figure = {type(figure)}')
-    #print(f'relayout_data = {json.dumps(relayout_data)}')
-    #print(f'relayout_data = {type(relayout_data)}')
-    is_loaded_image = session_table.is_loaded_image(username=username)
-    last_figure = figure_table.get_last_figure(username)
-    print(f'is_loaded_image = {is_loaded_image}; last_figure is None = {last_figure is None}')
-
-    
-    if ctx.triggered_id is None:
-        print(f'CTX IS NONE!')
-        if not is_loaded_image:
-            return get_figure(default_figure), 0
-        if last_figure is not None:
-            print('HERE!!!')
-            return last_figure, 0
-        if last_figure is None and is_loaded_image:
-            img = image_table.get_image(username)
-            fig = px.imshow(img, binary_string=True, width=800)
-            fig.update_layout(dragmode="drawopenpath", 
-                        newshape=NEWSHAPE)
-            figure_table.save_marker_class_1(username, [])
-            return fig, 0
-        print('Situation unexpected.')
-        return get_figure(default_figure), 0
-    
-    if relayout_data is not None and is_loaded_image:
-        print('RELAYOUT DATA IS NOT NONE')
-        # resize_arr = [key for key in relayout_data.keys() if '.path' in key]
-        # if len(resize_arr) != 0:
-        #     for el in resize_arr:
-        #         new_geometry = relayout_data[el]
-        #         idx_old = int(el[1+el.find('['):el.find(']')])
-        #         markers_class_1 = figure_table.get_marker_class_1(username)
-        #         markers_class_1[idx_old]['path'] = new_geometry
-        #         figure_table.save_marker_class_1(username, markers_class_1)
-        if "shapes" in relayout_data:
-            print('SHAPES IS NOT NONE SAVE FIGURE AND CLASS 1')
-            # dash.get_app().state_dict['start_annotation'] = True
-            figure_table.save_last_figure(username, figure)
-            makrers_data = relayout_data["shapes"] 
-            # print(f'markers data = {makrers_data}')
-            # print(f'markers data = {type(makrers_data)}')
-            figure_table.save_marker_class_1(username, makrers_data)
-
-    # define figure
-    last_figure = figure_table.get_last_figure(username)
-    figure_to_return = figure
-    if last_figure is None:
-        print(f'LAST FIGURE IS NONE')
-        figure_to_return = px.imshow(image_table.get_image(username), binary_string=True, width=800)#, height=800)
-        figure_to_return.update_layout(dragmode="drawopenpath", newshape=NEWSHAPE)
-
-    # count marked segments
-    n_marked = 0
-    markers_class_1 = figure_table.get_marker_class_1(username)
-    if markers_class_1 is not None:
-        n_marked = len(markers_class_1)
-
-    print('Situation unexpected x2.')
-    return figure_to_return, n_marked
-
-
     if ctx.triggered_id is None:
         if not hasattr(dash.get_app(), 'image'):
             return get_figure(default_figure), 0
@@ -282,7 +216,7 @@ def on_new_annotation(relayout_data,figure):
     print('Situation unexpected x2.')
     return figure_to_return, n_marked
 
-""" """
+
 
 
 """
