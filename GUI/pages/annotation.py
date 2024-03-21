@@ -109,9 +109,10 @@ def layout():
     Input('dropdown-selected-class', 'value'),
 )
 def change_selected_class(value):
-    return no_update
-    # change options if start annotating
-    if dash.get_app().state_dict.get('start_annotation', False):
+    username = request.authorization['username']
+    is_started_annotation = session_table.is_start_annotation(username=username)
+    is_loaded_image = session_table.is_loaded_image(username=username)
+    if is_started_annotation:
         options = get_options()
         for option in options:
             option['disabled'] = True
@@ -119,15 +120,15 @@ def change_selected_class(value):
             warning_msg = ''
         else:
             warning_msg = WARNING_MSG_CHANGE_SELECTOR
-    else:
+    elif is_loaded_image:
         if value is not None:
-            dash.get_app().state_dict['selected_class'] = value
-        options = no_update
-        warning_msg = ''
-    return options, dash.get_app().state_dict['selected_class'], warning_msg
+            session_table.update_selected_class(username=username, selected_class=value)
+    options = no_update
+    warning_msg = ''
+    selected_class = session_table.get_selected_class(username=username)
+    return options, selected_class, warning_msg
 
 
-"""
 @callback(
     Output('preview-annotated', 'figure'),
     Input('button-img-fill-bg', 'n_clicks'),
@@ -135,32 +136,30 @@ def change_selected_class(value):
 )
 def show_preview(n_clicks1, n_clicks2):
     username = request.authorization['username']    
-    if session_table.is_loaded_image(username=username):
-        ...
-    return no_update
+    marker_class_1 = figure_table.get_marker_class_1(username=username)
+    is_loaded_image = session_table.is_loaded_image(username=username)
     
-    if hasattr(dash.get_app(), 'image') and hasattr(dash.get_app(), 'markers_class_1'):
-        reverse = False
-        if ctx.triggered_id == 'button-img-fill-class-1':
-            if int(dash.get_app().state_dict['selected_class']) == 1:
-                reverse = False
-            else:
-                reverse = True
-        elif ctx.triggered_id == 'button-img-fill-bg':
-            if int(dash.get_app().state_dict['selected_class']) == 1:
-                reverse = True
-            else:
-                reverse = False
-
-
-        img_add, img = draw_annotations(dash.get_app().image.data, dash.get_app().markers_class_1, reverse=reverse)
-        fig = px.imshow(img_add, binary_string=True, width=800, height=800)
-        # print()
-        return fig
-    else:
+    if not is_loaded_image or marker_class_1 is None:
         return no_update
     
-"""
+    selected_class = session_table.get_selected_class(username=username)
+    reverse = False
+    if ctx.triggered_id == 'button-img-fill-class-1':
+        if int(selected_class) == 1:
+            reverse = False
+        else:
+            reverse = True
+    elif ctx.triggered_id == 'button-img-fill-bg':
+        if int(selected_class) == 1:
+            reverse = True
+        else:
+            reverse = False
+    
+    img_add, img = draw_annotations(image_table.get_image(username=username),
+                                    marker_class_1, reverse=reverse)
+    fig = px.imshow(img_add, binary_string=True, width=800, height=800)    
+    return fig
+    
 
 @callback(
     Output('graph-pic', 'figure'),
@@ -177,6 +176,7 @@ def on_new_annotation(relayout_data,figure):
     print()
     is_loaded_image = session_table.is_loaded_image(username=username)
     last_figure = figure_table.get_last_figure(username)
+    is_started_annotation = session_table.is_start_annotation(username=username)
     print(f'is_loaded_image = {is_loaded_image}; last_figure is None = {last_figure is None}') 
     if ctx.triggered_id is None:
         print(f'CTX IS NONE!')
@@ -205,9 +205,12 @@ def on_new_annotation(relayout_data,figure):
                 markers_class_1 = figure_table.get_marker_class_1(username)
                 markers_class_1[idx_old]['path'] = new_geometry
                 figure_table.save_marker_class_1(username, markers_class_1)
+                figure_table.save_last_figure(username, figure)
         elif "shapes" in relayout_data:
             print('SHAPES IS NOT NONE SAVE FIGURE AND CLASS 1')
             # dash.get_app().state_dict['start_annotation'] = True
+            if not is_started_annotation:
+                session_table.update_start_annotation(username, True)
             figure_table.save_last_figure(username, figure)
             makrers_data = relayout_data["shapes"] 
             figure_table.save_marker_class_1(username, makrers_data)
@@ -217,9 +220,11 @@ def on_new_annotation(relayout_data,figure):
     figure_to_return = figure
     if last_figure is None:
         print(f'LAST FIGURE IS NONE')
-        figure_to_return = px.imshow(image_table.get_image(username), binary_string=True, width=800)#, height=800)
-        figure_to_return.update_layout(dragmode="drawopenpath", newshape=NEWSHAPE)
-
+        if is_loaded_image:
+            figure_to_return = px.imshow(image_table.get_image(username), binary_string=True, width=800)#, height=800)
+            figure_to_return.update_layout(dragmode="drawopenpath", newshape=NEWSHAPE)
+        else:
+            figure_to_return = get_figure(default_figure)
     # count marked segments
     n_marked = 0
     markers_class_1 = figure_table.get_marker_class_1(username)
@@ -228,108 +233,3 @@ def on_new_annotation(relayout_data,figure):
 
     print('Situation unexpected x2.')
     return figure_to_return, n_marked
-
-
-    if ctx.triggered_id is None:
-        if not hasattr(dash.get_app(), 'image'):
-            return get_figure(default_figure), 0
-        if dash.get_app().last_figure is not None:
-            return dash.get_app().last_figure, 0
-        if dash.get_app().last_figure is None and hasattr(dash.get_app(), 'image'):
-            fig = px.imshow(dash.get_app().image.data, binary_string=True, width=800)#, height=800)
-            fig.update_layout(dragmode="drawopenpath", 
-                        newshape=NEWSHAPE)
-            dash.get_app().__setattr__('markers_class_1', [])
-            return fig, 0
-        print('Situation unexpected.')
-        return get_figure(default_figure), 0
-    
-    print(relayout_data)
-    if relayout_data is not None and hasattr(dash.get_app(), 'image'):
-        resize_arr = [key for key in relayout_data.keys() if '.path' in key]
-        if len(resize_arr) != 0:
-            for el in resize_arr:
-                new_geometry = relayout_data[el]
-                idx_old = int(el[1+el.find('['):el.find(']')])
-                dash.get_app().markers_class_1[idx_old]['path'] = new_geometry
-
-        elif "shapes" in relayout_data:
-            dash.get_app().state_dict['start_annotation'] = True
-            dash.get_app().__setattr__('last_figure', figure)
-            makrers_data = relayout_data["shapes"] 
-            dash.get_app().markers_class_1 = makrers_data
-
-    # define figure
-    figure_to_return = figure
-    if hasattr(dash.get_app(), 'last_figure'):
-        if dash.get_app().last_figure is None:
-            figure_to_return = px.imshow(dash.get_app().image.data, binary_string=True, width=800)#, height=800)
-            figure_to_return.update_layout(dragmode="drawopenpath", newshape=NEWSHAPE)
-
-
-    n_marked = 0
-    if hasattr(dash.get_app(), 'markers_class_1'):
-        n_marked = len(dash.get_app().markers_class_1)
-
-    print('Situation unexpected x2.')
-    return figure_to_return, n_marked
-
-""" """
-
-
-"""
-
-@callback(
-    Output('graph-pic', 'figure'),
-    Input('button-img-show', 'n_clicks'),
-    State("graph-pic", "figure"),       
-    Input("slider-img-size", "value"),
-    # prevent_initial_call=True
-)
-def show_image(n_clicks, figure, slider_value):
-    print(f'SHOW IMAGE. ctx.triggered_id = {ctx.triggered_id} \n')
-    # if ctx.triggered_id == 'slider-img-size' and hasattr(dash.get_app(), 'last_figure'):
-    #     print(dash.get_app().last_figure.keys())
-    #     fig = px.imshow(dash.get_app().image.data, binary_string=True, width=slider_value)#, height=800)
-    #     fig.update_layout(dragmode="drawclosedpath")
-    #     return fig
-    if hasattr(dash.get_app(), 'image'):
-        if dash.get_app().last_figure is not None:
-            #print(dash.get_app().last_figure.keys(), dash.get_app().last_figure['data'])
-            return dash.get_app().last_figure
-        fig = px.imshow(dash.get_app().image.data, binary_string=True, width=800)#, height=800)
-        fig.update_layout(dragmode="drawopenpath", 
-                    newshape=NEWSHAPE)
-        
-        return fig
-        
-    else:
-        return no_update
-
-
-
-@callback(
-    Output('text-marked-segments', 'children'),
-    Input("graph-pic", "relayoutData"),
-    State("graph-pic", "figure"),
-    
-)
-def on_new_annotation(relayout_data, figure):
-    # add annotations
-    print(f'ON NEW ANNOTATION. ctx.triggered_id = {ctx.triggered_id} \n')
-    if relayout_data is not None:
-        if "shapes" in relayout_data and hasattr(dash.get_app(), 'image'):
-            dash.get_app().state_dict['start_annotation'] = True    # start annotating
-            dash.get_app().__setattr__('last_figure', figure)
-            makrers_data = relayout_data["shapes"] 
-            if not hasattr(dash.get_app(), 'markers_class_1'):
-                dash.get_app().__setattr__('markers_class_1', None)
-            dash.get_app().markers_class_1 = makrers_data
-
-
-    # return number of marked segments
-    if hasattr(dash.get_app(), 'markers_class_1') and dash.get_app().last_figure is not None:
-        return len(dash.get_app().markers_class_1)
-    else:
-        return 0
-"""

@@ -50,6 +50,9 @@ tzdata==2023.3
 
 Werkzeug==2.2.3
 zipp==3.17.
+dash_auth==2.3.0
+sqlalchemy
+redis
 # pytz==2022.7.1
 # urllib3==1.26.12
 # six==1.16.0

@@ -21,5 +21,8 @@ def init_db():
 
 
 def drop_db():
+    Base.metadata.drop_all(engine)
+
+
+def drop_redis():
     redis.flushall()
-    #Base.metadata.drop_all(engine)

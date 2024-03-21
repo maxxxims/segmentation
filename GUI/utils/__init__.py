@@ -1,1 +1,1 @@
-from .login import get_users
+from .login import get_users, login_required
