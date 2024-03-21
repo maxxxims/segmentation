@@ -175,15 +175,9 @@ def on_new_annotation(relayout_data,figure):
     username = request.authorization['username']
     print()
     print()
-    # print(f'figure = {figure}')
-    # print(f'figure = {type(figure)}')
-    #print(f'relayout_data = {json.dumps(relayout_data)}')
-    #print(f'relayout_data = {type(relayout_data)}')
     is_loaded_image = session_table.is_loaded_image(username=username)
     last_figure = figure_table.get_last_figure(username)
-    print(f'is_loaded_image = {is_loaded_image}; last_figure is None = {last_figure is None}')
-
-    
+    print(f'is_loaded_image = {is_loaded_image}; last_figure is None = {last_figure is None}') 
     if ctx.triggered_id is None:
         print(f'CTX IS NONE!')
         if not is_loaded_image:
@@ -203,21 +197,19 @@ def on_new_annotation(relayout_data,figure):
     
     if relayout_data is not None and is_loaded_image:
         print('RELAYOUT DATA IS NOT NONE')
-        # resize_arr = [key for key in relayout_data.keys() if '.path' in key]
-        # if len(resize_arr) != 0:
-        #     for el in resize_arr:
-        #         new_geometry = relayout_data[el]
-        #         idx_old = int(el[1+el.find('['):el.find(']')])
-        #         markers_class_1 = figure_table.get_marker_class_1(username)
-        #         markers_class_1[idx_old]['path'] = new_geometry
-        #         figure_table.save_marker_class_1(username, markers_class_1)
-        if "shapes" in relayout_data:
+        resize_arr = [key for key in relayout_data.keys() if '.path' in key]
+        if len(resize_arr) != 0:
+            for el in resize_arr:
+                new_geometry = relayout_data[el]
+                idx_old = int(el[1+el.find('['):el.find(']')])
+                markers_class_1 = figure_table.get_marker_class_1(username)
+                markers_class_1[idx_old]['path'] = new_geometry
+                figure_table.save_marker_class_1(username, markers_class_1)
+        elif "shapes" in relayout_data:
             print('SHAPES IS NOT NONE SAVE FIGURE AND CLASS 1')
             # dash.get_app().state_dict['start_annotation'] = True
             figure_table.save_last_figure(username, figure)
             makrers_data = relayout_data["shapes"] 
-            # print(f'markers data = {makrers_data}')
-            # print(f'markers data = {type(makrers_data)}')
             figure_table.save_marker_class_1(username, makrers_data)
 
     # define figure
