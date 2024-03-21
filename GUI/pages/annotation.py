@@ -109,6 +109,13 @@ def layout():
     Input('dropdown-selected-class', 'value'),
 )
 def change_selected_class(value):
+    options = get_options()
+    for option in options:
+        option['disabled'] = True
+    if ctx.triggered_id is None:
+        warning_msg = ''
+    else:
+        warning_msg = WARNING_MSG_CHANGE_SELECTOR
     return no_update
     # change options if start annotating
     if dash.get_app().state_dict.get('start_annotation', False):
