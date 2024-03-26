@@ -1,4 +1,4 @@
-from .db import redis
+from ..db import redis
 import json
 
 def __redis_get(key: str):

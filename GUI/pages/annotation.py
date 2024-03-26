@@ -1,23 +1,28 @@
+import base64
 import plotly.express as px
 from dash import Dash, dcc, html, Input, Output, no_update, callback, State, ctx
+import dash_bootstrap_components as dbc
 from skimage import data
 import json
 import matplotlib.pyplot as plt
 import dash
+import dash_daq as daq
 from PIL import Image as IMG
 from backend import Image
 import numpy as np
-from backend import draw_annotations
+from backend import draw_annotations, draw_polygons_on_last_figure, delete_polygons_on_last_figure
+from GUI.utils import login_required
 from GUI.database import session_table, image_table, figure_table
 from flask import request
 import json
+import plotly.graph_objects as go
 
 
 dash.register_page(__name__, path = '/annotation')
 
 
-NEWSHAPE = {'opacity': 0.6, 'fillrule':'evenodd',
-             'line': {'color': 'red','dash': 'solid'}}
+NEWSHAPE = {'opacity': 0.3, 'fillrule':'evenodd',
+             'line': {'color': 'red','dash': 'solid', "width": 4},}
 
 WARNING_MSG_CHANGE_SELECTOR = 'Sorry, you can change this before annotating. Reload the image'
 
@@ -55,15 +60,36 @@ config = {
     ]
 }
 
-def layout():
+@login_required
+def layout(username:  str):
+    on = session_table.get_show_polygons(username)
+    line_width = session_table.get_line_width(username)
+    opacity = session_table.get_opacity(username)
+    print(f'opacity = {opacity}')
     layout = html.Div(
         [   
+            html.Div(id='setting-container',
+                                 children=[
+                                    daq.BooleanSwitch(id='show-polygons', on=on, label='Show polygons', labelPosition='top'),
+                                    html.Span(id='slider-cnt', children=[
+                                         dbc.Label('Line width', html_for='widht-slider'),
+                                         dcc.Slider(1, 8, value=line_width, id='widht-slider', marks=None,tooltip={"placement": "bottom", "always_visible": False} ),]),
+                                    html.Span(id='slider-cnt-2', children=[
+                                        dbc.Label('Opacity', html_for='opacity-slider'),
+                                        dcc.Slider(0, 1, value=opacity, id='opacity-slider', marks=None, tooltip={"placement": "bottom", "always_visible": False} ),
+                                    ])
+                                     ], style={"display": "grid",
+                                                "gridTemplateColumns": f"33% 33% 33%",
+                                                    },),
+            
             html.Div(
                 id='text-under-button',
-                children=[html.B(children="Marked segments: "),
+                children=[
+                        html.B(children="Marked segments: "),
                         html.Span(children='0', id="text-marked-segments"), html.Br(),
                         html.B(children="Selected class: "),
                         html.Span(children='', id="text-selected-class"),
+                        html.Span(id='hiden-btn', hidden=True),
                         dcc.Dropdown(
                             id="dropdown-selected-class",
                             options=get_options()
@@ -102,6 +128,66 @@ def layout():
     )
     return layout
 
+
+@callback(
+    Output('opacity-slider', 'value'),
+    Output('graph-pic', 'figure', allow_duplicate=True),
+    Input('opacity-slider', 'value'),
+    prevent_initial_call=True
+)
+@login_required
+def change_opacity(value, username: str):
+    session_table.update_opacity(username=username, opacity=value)
+    on = session_table.get_show_polygons(username)
+    return value, show_polygons(on)
+
+
+@callback(
+    Output('widht-slider', 'value'),
+    Output('graph-pic', 'figure', allow_duplicate=True),
+    Input('widht-slider', 'value'),
+    prevent_initial_call=True
+)
+@login_required
+def change_line_width(value, username: str):
+    session_table.update_line_width(username=username, line_width=value)
+    print(f'line width = {value}')
+    global NEWSHAPE
+    NEWSHAPE['line']['width'] = value
+    last_figure = figure_table.get_last_figure(username)
+    on = session_table.get_show_polygons(username)
+    
+    if last_figure is not None:
+        last_figure['layout']['newshape']['line']['width'] = value
+        print(f"NEW SHape = {last_figure['layout']['newshape']['line']['width']}")
+        figure_table.save_last_figure(username, last_figure)
+        return value, show_polygons(on)
+    return value, no_update
+
+
+@callback(
+    Output('graph-pic', 'figure', allow_duplicate=True),
+    Input('show-polygons', 'on'),
+    prevent_initial_call=True
+)
+@login_required
+def show_polygons(on, username: str):
+    last_figure = figure_table.get_last_figure(username)
+    session_table.update_show_polygons(username=username, show_polygons=on)
+    # print(f'on = {on}')
+    if last_figure is None:
+        return no_update
+    img = image_table.get_image(username)
+    markers_class_1 = figure_table.get_marker_class_1(username)
+    if on:
+        opacity = session_table.get_opacity(username)
+        figure_to_return = draw_polygons_on_last_figure(last_figure, img, markers_class_1, reverse=False, alpha=opacity) 
+    else:
+        figure_to_return = delete_polygons_on_last_figure(last_figure, img)
+    return figure_to_return
+
+
+
 @callback(
     Output('dropdown-selected-class', 'options'),
     Output('text-selected-class', 'children'),
@@ -138,6 +224,7 @@ def show_preview(n_clicks1, n_clicks2):
     username = request.authorization['username']    
     marker_class_1 = figure_table.get_marker_class_1(username=username)
     is_loaded_image = session_table.is_loaded_image(username=username)
+
     
     if not is_loaded_image or marker_class_1 is None:
         return no_update
@@ -157,7 +244,7 @@ def show_preview(n_clicks1, n_clicks2):
     
     img_add, img = draw_annotations(image_table.get_image(username=username),
                                     marker_class_1, reverse=reverse)
-    fig = px.imshow(img_add, binary_string=True, width=800, height=800)    
+    fig = px.imshow(img_add, binary_string=True, height=800)    
     return fig
     
 
@@ -169,14 +256,18 @@ def show_preview(n_clicks1, n_clicks2):
     # prevent_initial_call=True
     
 )
-def on_new_annotation(relayout_data,figure):
+def on_new_annotation(relayout_data, figure, allow_duplicate=True):
     # initial call
+    
     username = request.authorization['username']
     print()
     print()
     is_loaded_image = session_table.is_loaded_image(username=username)
     last_figure = figure_table.get_last_figure(username)
+    if last_figure is not None:
+        print(f"new shape!!!!!! = {last_figure['layout']['newshape']}")
     is_started_annotation = session_table.is_start_annotation(username=username)
+    
     print(f'is_loaded_image = {is_loaded_image}; last_figure is None = {last_figure is None}') 
     if ctx.triggered_id is None:
         print(f'CTX IS NONE!')
@@ -187,7 +278,7 @@ def on_new_annotation(relayout_data,figure):
             return last_figure, 0
         if last_figure is None and is_loaded_image:
             img = image_table.get_image(username)
-            fig = px.imshow(img, binary_string=True, width=800)
+            fig = px.imshow(img, binary_string=True, height=800)
             fig.update_layout(dragmode="drawopenpath", 
                         newshape=NEWSHAPE)
             figure_table.save_marker_class_1(username, [])
@@ -211,25 +302,40 @@ def on_new_annotation(relayout_data,figure):
             # dash.get_app().state_dict['start_annotation'] = True
             if not is_started_annotation:
                 session_table.update_start_annotation(username, True)
+            for el in relayout_data["shapes"]:
+                if 'label' in el.keys():
+                    el['label']['text'] = 'class 1'
+                    
             figure_table.save_last_figure(username, figure)
             makrers_data = relayout_data["shapes"] 
             figure_table.save_marker_class_1(username, makrers_data)
 
+
+    markers_class_1 = figure_table.get_marker_class_1(username)
+    img = image_table.get_image(username)
+    n_marked = 0
+    if markers_class_1 is not None:
+        n_marked = len(markers_class_1)
+        
+        
     # define figure
     last_figure = figure_table.get_last_figure(username)
     figure_to_return = figure
     if last_figure is None:
         print(f'LAST FIGURE IS NONE')
         if is_loaded_image:
-            figure_to_return = px.imshow(image_table.get_image(username), binary_string=True, width=800)#, height=800)
+            figure_to_return = px.imshow(image_table.get_image(username), binary_string=True, height=800)#, height=800)
             figure_to_return.update_layout(dragmode="drawopenpath", newshape=NEWSHAPE)
         else:
             figure_to_return = get_figure(default_figure)
+        return figure_to_return, n_marked
     # count marked segments
-    n_marked = 0
-    markers_class_1 = figure_table.get_marker_class_1(username)
-    if markers_class_1 is not None:
-        n_marked = len(markers_class_1)
+    
+    
+    
 
-    print('Situation unexpected x2.')
+    print(f'show polygon  = {session_table.get_show_polygons(username)}')
+    if session_table.get_show_polygons(username) and last_figure is not None:
+        opacity = session_table.get_opacity(username)
+        figure_to_return = draw_polygons_on_last_figure(figure_to_return, img, markers_class_1, reverse=False, alpha=opacity) 
     return figure_to_return, n_marked

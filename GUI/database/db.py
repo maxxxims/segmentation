@@ -26,3 +26,4 @@ def drop_db():
 
 def drop_redis():
     redis.flushall()
+    

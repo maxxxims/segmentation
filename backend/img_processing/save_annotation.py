@@ -39,7 +39,7 @@ def parse_path_to_save(path_to_save: str, file_name: str):
 
 
 def save_annotation(img: np.ndarray, data: dict,  data_json: dict, selected_class: int = 1,
-                    file_name: str = 'result.png', path_to_save: str = os.path.join('data', 'output')) -> str:
+                    file_name: str = 'result.png', path_to_save: str = os.path.join('data', 'output')) -> tuple:
     data_pathes = []
     for el in data:
         if el["type"] == "path":
@@ -87,7 +87,7 @@ def save_annotation(img: np.ndarray, data: dict,  data_json: dict, selected_clas
     with open(json_save_path, 'w') as f:
         json.dump(data_json, f)
 
-    return path_to_result_folder
+    return path_to_result_folder, data_json
 
 
 

@@ -13,4 +13,8 @@ class Session(Base):
 
     start_annotation: Mapped[bool] = mapped_column(default=False)
     selected_class:   Mapped[int] = mapped_column(default=1)
+    show_polygons:    Mapped[bool] = mapped_column(default=True)
     save_path:        Mapped[str] = mapped_column(default=None, nullable=True)
+    
+    line_width:       Mapped[int] = mapped_column(default=3)
+    opacity:          Mapped[float] = mapped_column(default=0.8)

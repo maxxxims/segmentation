@@ -1,5 +1,5 @@
-from .db import engine
-from .models import User
+from ..db import engine
+from ..models import User
 from sqlalchemy import select, insert, update, delete, and_, desc
 from uuid import uuid4, UUID
 from sqlalchemy.orm import joinedload

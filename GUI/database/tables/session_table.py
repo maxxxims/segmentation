@@ -1,5 +1,5 @@
-from .db import engine
-from .models import User, Session
+from ..db import engine
+from ..models import User, Session
 from sqlalchemy import select, insert, update, delete, and_, desc
 from uuid import uuid4, UUID
 from sqlalchemy.orm import joinedload
@@ -25,6 +25,13 @@ def is_start_annotation(username: str) -> bool:
         return False
     return status
 
+def get_show_polygons(username: str) -> bool:
+    with engine.connect() as conn:
+        status = conn.execute(select(Session.show_polygons).where(Session.username == username)).scalar_one()
+    if status is None:
+        return False
+    return status
+
 
 def get_selected_class(username: str) -> int:
     with engine.connect() as conn:
@@ -36,6 +43,29 @@ def get_save_path(username: str) -> str:
     with engine.connect() as conn:
         save_path = conn.execute(select(Session.save_path).where(Session.username == username)).scalar_one()
     return save_path
+
+
+def get_line_width(username: str) -> int:
+    with engine.connect() as conn:
+        line_width = conn.execute(select(Session.line_width).where(Session.username == username)).scalar_one()
+    return line_width
+
+
+def get_opacity(username: str) -> float:
+    with engine.connect() as conn:
+        opacity = conn.execute(select(Session.opacity).where(Session.username == username)).scalar_one()
+    return opacity
+
+def update_opacity(username: str, opacity: int):
+    with engine.connect() as conn:
+        with conn.begin():
+            conn.execute(update(Session).values(opacity=opacity).where(Session.username == username))
+
+
+def update_line_width(username: str, line_width: int):
+    with engine.connect() as conn:
+        with conn.begin():
+            conn.execute(update(Session).values(line_width=line_width).where(Session.username == username))
 
 
 def update_loaded_image(username: str, loaded_image: bool):
@@ -59,3 +89,9 @@ def update_save_path(username: str, save_path: str):
     with engine.connect() as conn:
         with conn.begin():
             conn.execute(update(Session).values(save_path=save_path).where(Session.username == username))
+            
+
+def update_show_polygons(username: str, show_polygons: bool):
+    with engine.connect() as conn:
+        with conn.begin():
+            conn.execute(update(Session).values(show_polygons=show_polygons).where(Session.username == username))

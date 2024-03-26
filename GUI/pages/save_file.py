@@ -89,7 +89,7 @@ def layout():
 )
 @login_required
 def show_image(n_clicks, figure, username):
-    print(f'username = {username} - {n_clicks}')
+    #print(f'username = {username} - {n_clicks}')
     last_figure = figure_table.get_last_figure(username=username)
     if last_figure is not None:
         marker_class_1 = figure_table.get_marker_class_1(username=username)
@@ -124,8 +124,10 @@ def save_annotated_img(n_clicks, username):
     img = image_table.get_image(username=username)
     json_data = figure_table.get_json_data(username=username)
     
-    path_to_save = save_annotation(img=img, data=marker_class_1,
+    path_to_save, data_json = save_annotation(img=img, data=marker_class_1,
                     data_json=json_data)
+    figure_table.save_json_data(username=username, json_data=data_json)
+    
     
     session_table.update_save_path(username=username, save_path=str(path_to_save))
     buttons_syles['display'] = 'block'
