@@ -20,13 +20,35 @@ def __bytes_to_image_pil(byte_data):
     image = Image.open(io.BytesIO(byte_data))
     return image
 
+def normalize_img(img: np.ndarray):
+    new_arr = np.copy(img)
+    print(f'SHAPE = {img.shape}')
+    for i in range(3):
+        new_arr[:, :, i] = 255 * ((img[:, :, i] - img[:, :, i].min()) / (img[:, :, i].max() - img[:, :, i].min()))
+    
+    return new_arr.astype(np.uint8)
+
+
+def save_correct_arr(img_orig, img_add):
+    new_img = np.zeros((*img_orig.shape, 4), dtype=np.uint8)
+    for i in range(3):
+        new_img[:, :, i] = img_orig
+    new_img[:, :, 3] = 255
+    img_normalized = normalize_img(new_img)
+    img_normalized[new_img != img_add] = normalize_img(img_add)[new_img != img_add]
+    return img_normalized
+    
+    
+    
+
 def draw_polygons_on_last_figure(last_figure: list, original_img: np.ndarray, marker_class_1: list, reverse: bool, alpha: float):
-    content = last_figure['data'][0]['source']
-    content_type, content_string = content.split(',')
-    byte_data = base64.b64decode(content_string)
-    img = np.asanyarray(Image.open(io.BytesIO(byte_data)))
+    #content = last_figure['data'][0]['source']
+    # content_type, content_string = content.split(',')
+    # byte_data = base64.b64decode(content_string)
+    # img = np.asanyarray(Image.open(io.BytesIO(byte_data)))
     img_add, _ = draw_annotations(original_img, marker_class_1, reverse=reverse, alpha=alpha)
-    plt.imsave('tmp.png', img_add)
+    c_img = save_correct_arr(original_img, img_add)
+    plt.imsave('tmp.png', c_img)
     with open('tmp.png', 'rb') as f:
         last_figure['data'][0]['source'] = f'data:image/png;base64,{base64.b64encode(f.read()).decode()}'
     return last_figure

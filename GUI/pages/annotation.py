@@ -249,9 +249,7 @@ def show_polygons(on, username: str):
 
 
 @callback(
-    # Output('dropdown-selected-class', 'options'),
     Output('text-selected-class', 'children'),
-    # Output('warning-msg-selector', 'children'),
     Output('graph-pic', 'figure', allow_duplicate=True),
     Input('dropdown-selected-class', 'value'),
     prevent_initial_call=True
@@ -267,22 +265,6 @@ def change_selected_class(value):
         on = session_table.get_show_polygons(username)
         return selected_class, show_polygons(on)
     return selected_class, no_update
-    # options = no_update
-    # if is_started_annotation:
-    #     options = get_options()
-    #     for option in options:
-    #         option['disabled'] = True
-    #     if ctx.triggered_id is None:
-    #         warning_msg = ''
-    #     else:
-    #         warning_msg = WARNING_MSG_CHANGE_SELECTOR
-    # elif is_loaded_image:
-    #     if value is not None:
-    #         session_table.update_selected_class(username=username, selected_class=value)
-    
-    # warning_msg = ''
-    # selected_class = session_table.get_selected_class(username=username)
-    return options, selected_class, warning_msg
 
 
 @callback(
@@ -375,7 +357,8 @@ def on_new_annotation(relayout_data, figure, allow_duplicate=True):
             for el in relayout_data["shapes"]:
                 if 'label' in el.keys():
                     el['label']['text'] = 'class 1'
-                    
+            for shape in relayout_data["shapes"]:
+                shape = {}
             figure_table.save_last_figure(username, figure)
             makrers_data = relayout_data["shapes"] 
             figure_table.save_marker_class_1(username, makrers_data)

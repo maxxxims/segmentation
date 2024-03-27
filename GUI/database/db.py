@@ -12,7 +12,9 @@ engine = create_engine(db_url, echo=False)
 
 REDIS_HOST = Config.get_redis_host()
 REDIS_PORT = Config.get_redis_port()
-redis = redis_db.Redis(host=REDIS_HOST, port=REDIS_PORT)
+REDIS_LOGIN = Config.get_redis_login()
+REDIS_PASSWORD = Config.get_redis_password()
+redis = redis_db.Redis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD)
 
 
 class Base(DeclarativeBase):
