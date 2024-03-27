@@ -8,7 +8,8 @@ from PIL import Image as IMG
 import base64
 import numpy as np
 from matplotlib import pyplot as plt
-from GUI.database import session_table, image_table
+from GUI.database import session_table, image_table, figure_table
+from GUI.utils import login_required
 from flask import request
 
 
@@ -17,7 +18,6 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 dash.register_page(__name__, path = '/upload_file')
 
 next_step_button = {
-    # 'display': 'none',
     'align': 'center',
 }
 
@@ -54,15 +54,14 @@ def layout():
 
 
 
-def show_image(username: str):
-    #image_data = np.load('GUI/storage/image.npy')
+def show_image(username: str, file_name: str):
     image_data = image_table.get_image(username)
     #fig = px.imshow(image_data, binary_string=True, width=400, height=400)
     #fig.update_layout(dragmode="drawclosedpath")
     return html.Div([
             html.H3('Uploaded image', style={'text-align': 'center'}),
             html.Div(children=[
-                html.B(f'Filename: '), html.Span('КАКОЕ-ТО ИМЯ'),
+                html.B(f'Filename: '), html.Span(file_name),
             ], style={'text-align': 'center'}),
             html.Div(
                 [html.Img(src=IMG.fromarray(image_data))], style={'display': 'flex',
@@ -87,36 +86,33 @@ def load_image_from_json(content, filename, username: str):
     data = json.loads(decoded)
     img = parse_json_file(data, test=True)
     image_table.save_image(username, img)
-    # np.save('GUI/storage/image.npy', img)
-    # plt.imsave('GUI/storage/image.png', img)
     session_table.update_loaded_image(username=username, loaded_image=True)
-    #dash.get_app().__setattr__('image', img)
-    dash.get_app().__setattr__('json_data', data)
+    figure_table.save_json_data(username=username, json_data=data)
 
 
 @callback(Output('output-image-upload-default', 'children'),
               Input('upload-image', 'contents'),
               State('upload-image', 'filename'),
               State('upload-image', 'last_modified'))
-def upload_file(content, file_name:str, list_of_dates):
-    username = request.authorization['username']
+@login_required
+def upload_file(content, file_name:str, list_of_dates, username):
     if content is not None:
         if file_name.endswith('.json'):
             load_image_from_json(content, file_name, username)
-            #dash.get_app().state_dict['start_annotation'] = False
-
+            session_table.update_start_annotation(username=username, start_annotation=False)
         else:
             return html.Div([
                 html.H3('Uploaded file should be in .json format', style={'text-align': 'center',
                                                                           'color': 'red'}),
             ])
-        # dash.get_app().__setattr__('last_figure', None)
-        # dash.get_app().__setattr__('markers_class_1', [])
+        figure_table.delete_last_figure(username=username)
+        figure_table.delete_marker_class_1(username=username)
+
 
     if session_table.is_loaded_image(username):
         next_step_button['display'] = 'block'
-        #if file_name is None and hasattr(dash.get_app(), 'json_data'):
-        #    file_name = dash.get_app().json_data['image_tag'] + '.json'
-        return show_image(username)#, next_step_button
-    
+        if file_name is None:
+            json_data = figure_table.get_json_data(username=username)
+            file_name = json_data['image_tag'] + '.json'
+        return show_image(username, file_name)
     return no_update

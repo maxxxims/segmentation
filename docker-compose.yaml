@@ -1,10 +1,17 @@
 version: '3.8'
 
 services:
+  redis:
+    image: redis
+    restart: always
+
   segmentation:
     build: .
     command: python3 -m GUI.server
+    restart: always
     volumes:
       - .:/usr/src/app
     ports:
       - "8050:8050"
+    depends_on:
+     - redis

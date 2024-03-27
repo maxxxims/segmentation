@@ -1,0 +1,1 @@
+from .tables import figure_table, image_table, session_table, task_table, user_table, user2task_table

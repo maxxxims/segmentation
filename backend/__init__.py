@@ -8,6 +8,6 @@ from .image3d import MarkerMaker3DBinary, MarkerPoints3D, Image3D
 from .filters.filters import BaseFilter2D, BaseFilter3D
 
 
-from .img_processing.img_processing import draw_pathes, draw_annotations, draw_annotated_image
+from .img_processing.img_processing import draw_pathes, draw_annotations, draw_annotated_image, draw_polygons_on_last_figure, delete_polygons_on_last_figure
 from .img_processing.save_annotation import save_annotation, check_annotation
 from .img_processing.img_download import parse_json_file

@@ -1,3 +1,4 @@
+from pathlib import Path
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,7 +18,7 @@ MASK_VALUE = 255
 
 
 
-def parse_path_to_save(path_to_save: str, file_name: str):
+def parse_path_to_save(path_to_save: Path, file_name: str) -> Path:
     """
         path_to_save = os.path.join('data', 'output')
         file_name = name of file
@@ -33,13 +34,14 @@ def parse_path_to_save(path_to_save: str, file_name: str):
         numbers = [int(el.split('result')[-1]) for el in file_names]
         numbers.sort()
         dir =  f'result{numbers[-1] + 1}'
-    path_to_result_file = os.path.join(path_to_save, dir)
-    os.mkdir(path_to_result_file)
-    return path_to_result_file#, os.path.join(path_to_result_file, file_name)
+    path_to_result_folder = path_to_save / dir
+    path_to_result_folder.mkdir(parents=True, exist_ok=True)
+    return path_to_result_folder
 
 
-def save_annotation(img: np.ndarray, data: dict,  data_json: dict, selected_class: int = 1,
-                    file_name: str = 'result.png', path_to_save: str = os.path.join('data', 'output')) -> str:
+def save_annotation(img: np.ndarray, data: dict,  data_json: dict, path_to_save: Path,
+                    folder_name: str, selected_class: int = 1,) -> tuple:
+    
     data_pathes = []
     for el in data:
         if el["type"] == "path":
@@ -54,9 +56,11 @@ def save_annotation(img: np.ndarray, data: dict,  data_json: dict, selected_clas
         select = stencil != MASK_VALUE
         select_bg = stencil == MASK_VALUE
 
-    path_to_result_folder = parse_path_to_save(path_to_save, file_name)
-    png_save_path = os.path.join(path_to_result_folder, f'{data_json["image_tag"]}.png')
-    print(png_save_path)
+    #path_to_result_folder = parse_path_to_save(path_to_save, file_name)
+    path_to_result_folder = path_to_save / folder_name
+    path_to_result_folder.mkdir(parents=True, exist_ok=True)
+    png_save_path = path_to_result_folder / f'{data_json["image_tag"]}.png'
+    #print(png_save_path)
 
     # save png
     annotated_img = np.zeros((img.shape[0], img.shape[1]))
@@ -65,7 +69,7 @@ def save_annotation(img: np.ndarray, data: dict,  data_json: dict, selected_clas
 
     # save json
     #json_save_path = png_save_path.replace('.png', '.json')
-    json_save_path = os.path.join(path_to_result_folder, 'result.json')
+    json_save_path = path_to_result_folder / 'result.json'
     
     y_1_class, x_1_class = np.where(select)
     y_0_class, x_0_class = np.where(select_bg)
@@ -87,7 +91,7 @@ def save_annotation(img: np.ndarray, data: dict,  data_json: dict, selected_clas
     with open(json_save_path, 'w') as f:
         json.dump(data_json, f)
 
-    return path_to_result_folder
+    return path_to_result_folder, data_json
 
 
 
@@ -163,4 +167,4 @@ def check_annotation(data: dict, selected_color: int, save_acc: bool = False,
             json.dump(data, f, indent=4)
 
     #return acc, diffrence  
-    return acc, original_img
+    return acc['Accuracy'], original_img

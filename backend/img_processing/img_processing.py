@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from svg.path import parse_path, path
 from .save_annotation import draw_pathes as draw_pathes_another, MASK_VALUE
+import base64
+import io
 
 
 N_POINTS = int(1e3)
@@ -14,6 +16,50 @@ ANNOTATION_COLOR_BG = (150, 10, 0, 0)
 # MASK_VALUE = 255
 
 
+def __bytes_to_image_pil(byte_data):
+    image = Image.open(io.BytesIO(byte_data))
+    return image
+
+def normalize_img(img: np.ndarray):
+    new_arr = np.copy(img)
+    print(f'SHAPE = {img.shape}')
+    for i in range(3):
+        new_arr[:, :, i] = 255 * ((img[:, :, i] - img[:, :, i].min()) / (img[:, :, i].max() - img[:, :, i].min()))
+    
+    return new_arr.astype(np.uint8)
+
+
+def save_correct_arr(img_orig, img_add):
+    new_img = np.zeros((*img_orig.shape, 4), dtype=np.uint8)
+    for i in range(3):
+        new_img[:, :, i] = img_orig
+    new_img[:, :, 3] = 255
+    img_normalized = normalize_img(new_img)
+    img_normalized[new_img != img_add] = normalize_img(img_add)[new_img != img_add]
+    return img_normalized
+    
+    
+    
+
+def draw_polygons_on_last_figure(last_figure: list, original_img: np.ndarray, marker_class_1: list, reverse: bool, alpha: float):
+    #content = last_figure['data'][0]['source']
+    # content_type, content_string = content.split(',')
+    # byte_data = base64.b64decode(content_string)
+    # img = np.asanyarray(Image.open(io.BytesIO(byte_data)))
+    img_add, _ = draw_annotations(original_img, marker_class_1, reverse=reverse, alpha=alpha)
+    c_img = save_correct_arr(original_img, img_add)
+    plt.imsave('tmp.png', c_img)
+    with open('tmp.png', 'rb') as f:
+        last_figure['data'][0]['source'] = f'data:image/png;base64,{base64.b64encode(f.read()).decode()}'
+    return last_figure
+
+
+def delete_polygons_on_last_figure(last_figure: list, original_img: np.ndarray):
+    plt.imsave('tmp.png', original_img, cmap='gray')
+    with open('tmp.png', 'rb') as f:
+        last_figure['data'][0]['source'] = f'data:image/png;base64,{base64.b64encode(f.read()).decode()}'
+    return last_figure
+    
 
 
 def draw_annotated_image(_img: np.ndarray, data: dict, selected_class: int) -> np.ndarray:
@@ -45,11 +91,11 @@ def draw_annotated_image(_img: np.ndarray, data: dict, selected_class: int) -> n
 
 
 
-def draw_annotations(_img: np.ndarray, data: dict, reverse: bool = False):
+def draw_annotations(_img: np.ndarray, data: dict, reverse: bool = False, alpha: float = 0.8):
     """
         if reverse: draw background
     """
-    
+    print(f'*********************8 reverse = {reverse}')
 
     # change channels if needed
     if len(_img.shape) == 2:
@@ -67,7 +113,7 @@ def draw_annotations(_img: np.ndarray, data: dict, reverse: bool = False):
         if el["type"] == "path":
             data_pathes.append(el)
 
-    img_add, img = draw_pathes(_img, data_pathes, reverse=reverse)
+    img_add, img = draw_pathes(_img, data_pathes, reverse=reverse, alpha=alpha)
     return img_add, img
 
 
@@ -83,7 +129,18 @@ def draw_figures(_img: np.ndarray, data: list[dict], reverse: bool = False):
     ...
 
 
-def draw_pathes(_img: np.ndarray, data: list[dict], reverse: bool = False):
+def draw_pathes(_img: np.ndarray, data: list[dict], reverse: bool = False, alpha: float = 0.8):
+    """_summary_
+
+    Args:
+        _img (np.ndarray): _description_
+        data (list[dict]): _description_
+        reverse (bool, optional): _description_. Defaults to False.
+        alpha (float, optional): _description_. Defaults to 0.8.
+
+    Returns:
+        _type_: _description_
+    """
     # print(f'reverse = {reverse}')
     img_orig = np.copy(_img)
     img = np.copy(_img)
@@ -106,7 +163,7 @@ def draw_pathes(_img: np.ndarray, data: list[dict], reverse: bool = False):
     for cnt in contour:
         cv2.NONE_POLISHER
         #cv2.drawContours(stencil, cnt, contourIdx=-1, color=MASK_VALUE,thickness=cv2.FILLED)
-        cv2.fillPoly(stencil, pts=[cnt], color=MASK_VALUE) #, fillrule='nonzero'
+        cv2.fillPoly(stencil, pts=[cnt], color=MASK_VALUE, lineType=cv2.LINE_8) #, fillrule='nonzero'
     if not reverse:
         select = stencil == MASK_VALUE
         img[select] = ANNOTATION_COLOR
@@ -123,7 +180,7 @@ def draw_pathes(_img: np.ndarray, data: list[dict], reverse: bool = False):
 
 
     # return img with polygons
-    alpha = 0.8
+    # alpha = 0.8
     beta = 1-alpha
     gamma = 0
 

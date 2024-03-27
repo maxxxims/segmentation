@@ -1,14 +1,20 @@
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, joinedload
 from sqlalchemy import create_engine, MetaData
 import redis as redis_db
+import GUI.config as config
+from ..config import Config
 
 
-db_url = 'sqlite:///GUI/database/database.db'
+db_url = Config.get_db_url()
 print(f'DB URL = {db_url}')
 engine = create_engine(db_url, echo=False)
 
 
-redis = redis_db.Redis(host='localhost', port=6379)
+REDIS_HOST = Config.get_redis_host()
+REDIS_PORT = Config.get_redis_port()
+REDIS_LOGIN = Config.get_redis_login()
+REDIS_PASSWORD = Config.get_redis_password()
+redis = redis_db.Redis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD)
 
 
 class Base(DeclarativeBase):
@@ -21,5 +27,9 @@ def init_db():
 
 
 def drop_db():
+    Base.metadata.drop_all(engine)
+
+
+def drop_redis():
     redis.flushall()
-    #Base.metadata.drop_all(engine)
+    

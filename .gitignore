@@ -6,7 +6,9 @@ backend/config/
 .*
 **.ipynb
 **.csv
+**.db
 
+result**
 
 main.py
 3d_img.py

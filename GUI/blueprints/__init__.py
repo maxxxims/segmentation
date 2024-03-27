@@ -1,0 +1,1 @@
+from .blueprints import change_annotation
