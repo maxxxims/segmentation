@@ -21,16 +21,21 @@ import plotly.graph_objects as go
 dash.register_page(__name__, path = '/annotation')
 
 
-NEWSHAPE = {'opacity': 0.3, 'fillrule':'evenodd',
+NEWSHAPE = {'opacity': 0.3, 'fillrule':'evenodd', #nonzero
              'line': {'color': 'red','dash': 'solid', "width": 4},}
 
 WARNING_MSG_CHANGE_SELECTOR = 'Sorry, you can change this before annotating. Reload the image'
 
-def get_figure(img_data, height=800):
+
+@login_required
+def get_figure(img_data, username: str, height=800):
     fig = px.imshow(default_figure, binary_string=True, height=height)
     # fig.update_layout(dragmode="drawopenpath",
     #                   newshape=dict(fillcolor="cyan", opacity=0.3, line=dict(color="darkblue", width=8)))
     # nonzero
+    line_opacity = session_table.get_line_opacity(username)
+    global NEWSHAPE
+    NEWSHAPE['opacity'] = line_opacity
     fig.update_layout(dragmode="drawopenpath", 
                     newshape=NEWSHAPE)
     
@@ -46,7 +51,7 @@ def get_options():
 
 default_figure = 255 * np.ones((200, 200, 3))
 
-fig = get_figure(default_figure)
+# fig = get_figure(default_figure)
 
 
 config = {
@@ -64,22 +69,32 @@ config = {
 def layout(username:  str):
     on = session_table.get_show_polygons(username)
     line_width = session_table.get_line_width(username)
-    opacity = session_table.get_opacity(username)
-    print(f'opacity = {opacity}')
+    fill_opacity = session_table.get_fill_opacity(username)
+    line_opacity = session_table.get_line_opacity(username)
+    selected_class = session_table.get_selected_class(username=username)
+    print(f'opacity = {fill_opacity}')
     layout = html.Div(
         [   
             html.Div(id='setting-container',
                                  children=[
-                                    daq.BooleanSwitch(id='show-polygons', on=on, label='Show polygons', labelPosition='top'),
+                                    html.Span(id='btns-cnt', children=[
+                                        daq.BooleanSwitch(id='show-polygons', on=on, label='Show polygons', labelPosition='top'),
+                                        dbc.Button('Drop settings', id='drop-settings', color="primary", className="me-1", n_clicks=0, style={'margin-left': '10px'}),
+                                    ]),
+                                    
                                     html.Span(id='slider-cnt', children=[
                                          dbc.Label('Line width', html_for='widht-slider'),
                                          dcc.Slider(1, 8, value=line_width, id='widht-slider', marks=None,tooltip={"placement": "bottom", "always_visible": False} ),]),
                                     html.Span(id='slider-cnt-2', children=[
-                                        dbc.Label('Opacity', html_for='opacity-slider'),
-                                        dcc.Slider(0, 1, value=opacity, id='opacity-slider', marks=None, tooltip={"placement": "bottom", "always_visible": False} ),
+                                        dbc.Label('Fill opacity', html_for='opacity-slider'),
+                                        dcc.Slider(0, 1, value=fill_opacity, id='opacity-slider', marks=None, tooltip={"placement": "bottom", "always_visible": False} ),
+                                    ]),
+                                    html.Span(id='slider-line-opacity', children=[
+                                        dbc.Label('Line opacity', html_for='opacity-line-slider'),
+                                        dcc.Slider(0, 1, value=line_opacity, id='opacity-line-slider', marks=None, tooltip={"placement": "bottom", "always_visible": False} )
                                     ])
                                      ], style={"display": "grid",
-                                                "gridTemplateColumns": f"33% 33% 33%",
+                                                "gridTemplateColumns": f"25% 25% 25% 25%",
                                                     },),
             
             html.Div(
@@ -88,7 +103,7 @@ def layout(username:  str):
                         html.B(children="Marked segments: "),
                         html.Span(children='0', id="text-marked-segments"), html.Br(),
                         html.B(children="Selected class: "),
-                        html.Span(children='', id="text-selected-class"),
+                        html.Span(children=selected_class, id="text-selected-class"),
                         html.Span(id='hiden-btn', hidden=True),
                         dcc.Dropdown(
                             id="dropdown-selected-class",
@@ -103,7 +118,7 @@ def layout(username:  str):
             html.Button("Show image", id="button-img-show", n_clicks=0, style={'display': 'none'}),
 
             html.Div(id="container-img", children=[   #style={'widhth': '800px', 'height': 'auto'},
-                dcc.Graph(id="graph-pic", figure=fig, config=config, ),
+                dcc.Graph(id="graph-pic", figure=get_figure(default_figure), config=config, ),
                 html.Div(
                     style={'justify-content': 'center'},
                     children=[
@@ -113,8 +128,9 @@ def layout(username:  str):
                     ]
                 ),
                 
-                dcc.Graph(id="preview-annotated", figure=fig, config={}),
+                dcc.Graph(id="preview-annotated", figure=get_figure(default_figure), config={}),
                 html.Pre(id="annotations-data-pre"),
+                html.Span(id='hidden2', hidden=True),
 
             ]), #'justify-content': 'center', 'margin-bottom': '20px' style={'display': 'flex', }
             
@@ -130,20 +146,64 @@ def layout(username:  str):
 
 
 @callback(
-    Output('opacity-slider', 'value'),
+    Output('widht-slider', 'value', allow_duplicate=True),
+    Output('opacity-line-slider', 'value', allow_duplicate=True),
+    Output('opacity-slider', 'value', allow_duplicate=True),
+    # Output('graph-pic', 'figure', allow_duplicate=True),
+    Input('drop-settings', 'n_clicks'),
+    prevent_initial_call=True
+)
+@login_required
+def drop_settings(n_clicks, username: str):
+    line_width=3
+    line_opacity=0.5
+    fill_opacity=0.8
+    session_table.update_fill_opacity(username=username, opacity=fill_opacity)
+    session_table.update_line_opacity(username=username, opacity=line_opacity)
+    session_table.update_line_width(username=username, line_width=line_width)
+    # last_figure = figure_table.get_last_figure(username)
+    # if last_figure is not None:
+    #     on = session_table.get_show_polygons(username)
+    #     return line_width, line_opacity, fill_opacity#, show_polygons(on)
+    return line_width, line_opacity, fill_opacity#, no_update
+
+
+@callback(
+    Output('opacity-line-slider', 'value', allow_duplicate=True),
+    Output('graph-pic', 'figure', allow_duplicate=True),
+    Input('opacity-line-slider', 'value'),
+    prevent_initial_call=True
+)
+@login_required
+def change_line_opacity(value, username: str):
+    session_table.update_line_opacity(username=username, opacity=value)
+    global NEWSHAPE
+    NEWSHAPE['opacity'] = value
+    last_figure = figure_table.get_last_figure(username)
+    on = session_table.get_show_polygons(username)
+    print(f'line opacity = {value}')
+    if last_figure is not None:
+        last_figure['layout']['newshape']['opacity'] = value
+        figure_table.save_last_figure(username, last_figure)
+        return value, show_polygons(on)
+    return value, no_update
+
+
+@callback(
+    Output('opacity-slider', 'value', allow_duplicate=True),
     Output('graph-pic', 'figure', allow_duplicate=True),
     Input('opacity-slider', 'value'),
     prevent_initial_call=True
 )
 @login_required
-def change_opacity(value, username: str):
-    session_table.update_opacity(username=username, opacity=value)
+def change_fill_opacity(value, username: str):
+    session_table.update_fill_opacity(username=username, opacity=value)
     on = session_table.get_show_polygons(username)
     return value, show_polygons(on)
 
 
 @callback(
-    Output('widht-slider', 'value'),
+    Output('widht-slider', 'value', allow_duplicate=True),
     Output('graph-pic', 'figure', allow_duplicate=True),
     Input('widht-slider', 'value'),
     prevent_initial_call=True
@@ -180,8 +240,8 @@ def show_polygons(on, username: str):
     img = image_table.get_image(username)
     markers_class_1 = figure_table.get_marker_class_1(username)
     if on:
-        opacity = session_table.get_opacity(username)
-        figure_to_return = draw_polygons_on_last_figure(last_figure, img, markers_class_1, reverse=False, alpha=opacity) 
+        fill_opacity = session_table.get_fill_opacity(username)
+        figure_to_return = draw_polygons_on_last_figure(last_figure, img, markers_class_1, reverse=__get_reverse(), alpha=fill_opacity) 
     else:
         figure_to_return = delete_polygons_on_last_figure(last_figure, img)
     return figure_to_return
@@ -189,29 +249,39 @@ def show_polygons(on, username: str):
 
 
 @callback(
-    Output('dropdown-selected-class', 'options'),
+    # Output('dropdown-selected-class', 'options'),
     Output('text-selected-class', 'children'),
-    Output('warning-msg-selector', 'children'),
+    # Output('warning-msg-selector', 'children'),
+    Output('graph-pic', 'figure', allow_duplicate=True),
     Input('dropdown-selected-class', 'value'),
+    prevent_initial_call=True
 )
 def change_selected_class(value):
     username = request.authorization['username']
     is_started_annotation = session_table.is_start_annotation(username=username)
-    is_loaded_image = session_table.is_loaded_image(username=username)
-    if is_started_annotation:
-        options = get_options()
-        for option in options:
-            option['disabled'] = True
-        if ctx.triggered_id is None:
-            warning_msg = ''
-        else:
-            warning_msg = WARNING_MSG_CHANGE_SELECTOR
-    elif is_loaded_image:
-        if value is not None:
-            session_table.update_selected_class(username=username, selected_class=value)
-    options = no_update
-    warning_msg = ''
+    # is_loaded_image = session_table.is_loaded_image(username=username)
+    last_figure = figure_table.get_last_figure(username=username)
+    session_table.update_selected_class(username=username, selected_class=value)
     selected_class = session_table.get_selected_class(username=username)
+    if last_figure is not None:
+        on = session_table.get_show_polygons(username)
+        return selected_class, show_polygons(on)
+    return selected_class, no_update
+    # options = no_update
+    # if is_started_annotation:
+    #     options = get_options()
+    #     for option in options:
+    #         option['disabled'] = True
+    #     if ctx.triggered_id is None:
+    #         warning_msg = ''
+    #     else:
+    #         warning_msg = WARNING_MSG_CHANGE_SELECTOR
+    # elif is_loaded_image:
+    #     if value is not None:
+    #         session_table.update_selected_class(username=username, selected_class=value)
+    
+    # warning_msg = ''
+    # selected_class = session_table.get_selected_class(username=username)
     return options, selected_class, warning_msg
 
 
@@ -336,6 +406,17 @@ def on_new_annotation(relayout_data, figure, allow_duplicate=True):
 
     print(f'show polygon  = {session_table.get_show_polygons(username)}')
     if session_table.get_show_polygons(username) and last_figure is not None:
-        opacity = session_table.get_opacity(username)
-        figure_to_return = draw_polygons_on_last_figure(figure_to_return, img, markers_class_1, reverse=False, alpha=opacity) 
+        fill_opacity = session_table.get_fill_opacity(username)
+        figure_to_return = draw_polygons_on_last_figure(figure_to_return, img, markers_class_1, reverse=__get_reverse(), alpha=fill_opacity) 
     return figure_to_return, n_marked
+
+
+
+@login_required
+def __get_reverse(username: str):
+    return False
+    selected_class = session_table.get_selected_class(username)
+    if selected_class == 1:
+        return False
+    else:
+        return True

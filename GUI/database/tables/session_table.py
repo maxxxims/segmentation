@@ -51,15 +51,27 @@ def get_line_width(username: str) -> int:
     return line_width
 
 
-def get_opacity(username: str) -> float:
+def get_line_opacity(username: str) -> float:
     with engine.connect() as conn:
-        opacity = conn.execute(select(Session.opacity).where(Session.username == username)).scalar_one()
+        opacity = conn.execute(select(Session.line_opacity).where(Session.username == username)).scalar_one()
     return opacity
 
-def update_opacity(username: str, opacity: int):
+def get_fill_opacity(username: str) -> float:
+    with engine.connect() as conn:
+        opacity = conn.execute(select(Session.fill_opacity).where(Session.username == username)).scalar_one()
+    return opacity
+
+
+def update_fill_opacity(username: str, opacity: int):
     with engine.connect() as conn:
         with conn.begin():
-            conn.execute(update(Session).values(opacity=opacity).where(Session.username == username))
+            conn.execute(update(Session).values(fill_opacity=opacity).where(Session.username == username))
+
+
+def update_line_opacity(username: str, opacity: int):
+    with engine.connect() as conn:
+        with conn.begin():
+            conn.execute(update(Session).values(line_opacity=opacity).where(Session.username == username))
 
 
 def update_line_width(username: str, line_width: int):

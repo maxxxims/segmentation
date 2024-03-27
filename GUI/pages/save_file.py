@@ -7,8 +7,8 @@ import dash
 from PIL import Image as IMG
 from backend import Image, draw_annotations, save_annotation, check_annotation, draw_annotated_image
 import numpy as np
-from GUI.database import session_table, image_table, figure_table
-from GUI.utils import login_required
+from GUI.database import session_table, image_table, figure_table, user2task_table
+from GUI.utils import login_required, finish_task
 from flask import request
 from pathlib import Path
 
@@ -45,19 +45,13 @@ def layout():
                         html.Div(
                             [
                                 html.Button("SAVE IMAGE", id="button-save-annotated-img", n_clicks=0, style={'width': '10%'}),
-                                html.Button("CHECK ANNOTATION", id="button-check-annotated-img", 
-                                n_clicks=0, style = {'display': 'none', 'width': '10%', 'margin-left': '40px'}),
                             ], style={'display': 'flex', 'margin-top': '15px'},
                     
                         ),
                         html.P(children=[
-                            html.B('Saved path: '), html.Span(id='text-save-annotated-img', children='not saved yet')
-                        ]),
-                        # html.P(id='container-result-annotated-img', children=[]),
-                        html.P(children=[
                             html.B('Accuracy:   '), html.Span(id='result-accuracy', children=DEFAULT_ACCURACY)
                         ]),
-                        #html.Div(id='text-save-annotated-img', children='', style={'line-height': '1.5'}),
+            
                         html.Div(id='container-result-annotated-img', children=[])
 
                         ],
@@ -70,7 +64,6 @@ def layout():
             
             html.Div(id="container-img-annotated", children=[
                 dcc.Graph(id="graph-pic-annotated", figure=default_figure, config=config),
-                dcc.Markdown("Characteristics of shapes"),
                 html.Pre(id="annotations-data-pre"),
 
             ]),
@@ -107,43 +100,62 @@ def show_image(n_clicks, figure, username):
     
 
 @callback(
-    Output('text-save-annotated-img', 'children'),
-    Output('button-check-annotated-img', 'style'),
+    # Output('text-save-annotated-img', 'children'),
+    # Output('button-check-annotated-img', 'style'),
+    Output('result-accuracy', 'children'),
     Input("button-save-annotated-img", "n_clicks"),
     prevent_initial_call=True
 )
 @login_required
 def save_annotated_img(n_clicks, username):
+    task_uuid = user2task_table.get_current_task_uuid(username=username)
     marker_class_1 = figure_table.get_marker_class_1(username=username)
     last_figure = figure_table.get_last_figure(username=username)
     
     if marker_class_1 is None or last_figure is None:
         buttons_syles['display'] = 'none'
-        return "annotations not found", buttons_syles
+        return "not checked yet"
     
     img = image_table.get_image(username=username)
     json_data = figure_table.get_json_data(username=username)
+    attempt_number = user2task_table.get_current_task_attempt_number(username=username)
+    current_task = user2task_table.get_task_by_uuid(uuid=task_uuid)
     
+    path_to_save_folder = Path('data/output') / username
+    # path_to_save_folder.mkdir(parents=True, exist_ok=True)
+    image_name = current_task.image_name
+    folder_name = f'{image_name}_{attempt_number}'
+    #SAVE ANNOTATION
     path_to_save, data_json = save_annotation(img=img, data=marker_class_1,
-                    data_json=json_data)
+                    data_json=json_data, path_to_save=path_to_save_folder, folder_name=folder_name)
+    
+    # CALCULATE ACCUARACY
+    selected_class = session_table.get_selected_class(username=username)
+    accuracy, segmented_img = check_annotation(json_data, selected_color=selected_class,
+                                        save_acc=False, path_to_save=path_to_save)
+    json_data['accuracy'] = accuracy
+    
+    
     figure_table.save_json_data(username=username, json_data=data_json)
-    
-    
+    user2task_table.update_metric(task_uuid, metric=accuracy)    
+    user2task_table.update_save_folder(username=username, uuid=task_uuid, save_folder=str(path_to_save_folder))
     session_table.update_save_path(username=username, save_path=str(path_to_save))
+    finish_task(username)
+    
     buttons_syles['display'] = 'block'
-    return f'{path_to_save}', buttons_syles
+    return round(accuracy, 2)
 
 """
 
 """
 
-@callback(
-    Output('container-result-annotated-img', 'children'),
-    Output('result-accuracy', 'children'),
-    Input("button-check-annotated-img", "n_clicks"),
-    prevent_initial_call=True
-)
-@login_required
+# @callback(
+#     Output('container-result-annotated-img', 'children'),
+#     Output('result-accuracy', 'children'),
+#     Input("button-check-annotated-img", "n_clicks"),
+#     prevent_initial_call=True
+# )
+# @login_required
 def check_annotation_img(n_clicks, username):
     global DEFAULT_ACCURACY
     json_data = figure_table.get_json_data(username=username)

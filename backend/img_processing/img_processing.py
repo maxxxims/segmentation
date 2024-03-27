@@ -73,7 +73,7 @@ def draw_annotations(_img: np.ndarray, data: dict, reverse: bool = False, alpha:
     """
         if reverse: draw background
     """
-    
+    print(f'*********************8 reverse = {reverse}')
 
     # change channels if needed
     if len(_img.shape) == 2:
@@ -141,7 +141,7 @@ def draw_pathes(_img: np.ndarray, data: list[dict], reverse: bool = False, alpha
     for cnt in contour:
         cv2.NONE_POLISHER
         #cv2.drawContours(stencil, cnt, contourIdx=-1, color=MASK_VALUE,thickness=cv2.FILLED)
-        cv2.fillPoly(stencil, pts=[cnt], color=MASK_VALUE) #, fillrule='nonzero'
+        cv2.fillPoly(stencil, pts=[cnt], color=MASK_VALUE, lineType=cv2.LINE_8) #, fillrule='nonzero'
     if not reverse:
         select = stencil == MASK_VALUE
         img[select] = ANNOTATION_COLOR
