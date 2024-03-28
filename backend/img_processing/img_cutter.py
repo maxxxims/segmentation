@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 import json
 import numpy as np
 import os 
-
+from pathlib import Path
 
 
 
@@ -85,8 +85,8 @@ def save_pair():
 
 
 ########################################################
-MAIN_FOLDER = r'C:\Users\maxxx\VSprojects\back'
-RELATIVE_GT_PATH = r'02. Segmented\00. Original'
+MAIN_FOLDER = Path(r'C:\Users\maxxx\VSprojects\back')
+RELATIVE_GT_PATH = Path(r'02. Segmented\00. Original')
 
 def _save_annotation_json(width0: int, height0: int, width: int, height: int,
               image_tag: str, original_image_name: str, image_path: str,
@@ -112,51 +112,58 @@ def make_configuration_file(cfg: dict):
     path_folder = cfg['folder_path']
     relative_img_path = cfg['relative_image_path']
 
-    path_to_img    = os.path.join(MAIN_FOLDER, path_folder, relative_img_path, img_name)
-    path_to_gt_img = os.path.join(MAIN_FOLDER, path_folder, RELATIVE_GT_PATH, img_name)
+    path_to_img    = MAIN_FOLDER / path_folder / relative_img_path / img_name
+    path_to_gt_img = MAIN_FOLDER / path_folder / RELATIVE_GT_PATH / img_name
+    assert path_to_img.exists() and path_to_gt_img.exists()
+
     img = Image(path_to_img)
     img_annotated = Image(path_to_gt_img)
 
     file_name = cfg['image_tag']
 
-    height0, width0, height, width = 2060, 2140, 300, 300
+    # height0, width0, height, width = 2060, 2140, 300, 300
     # height0, width0, height, width = 1070, 1270, 300, 300
-    cfg['height0'] = height0
-    cfg['width0'] = width0
-    cfg['height'] = height
-    cfg['width'] = width
+    height0 = cfg['height0']
+    width0 = cfg['width0']
+    height = cfg['height']
+    width = cfg['width']
 
     # img.show()
     # show_slice(img, height0, width0, height, width)
     # return 0
-
-
     cut_image(img, img_annotated, height0, width0, height, width, file_name=file_name)
-    print('Print link to orig img')
-    original_image_url = input()
-    print('Print link to annotated img')
-    annotated_image_url = input()
-
-    cfg['original_image_url']  = original_image_url
-    cfg['annotated_image_url'] = annotated_image_url
 
     with open(f'data/{file_name}.json', 'w') as f:
         json.dump(cfg, f, indent=2)
-    
+
+    img.show()
+    img_annotated.show()
+
 
 if __name__ == '__main__':
+    radius = 0
     cfg = {
-        'folder_path': r'images\4',   #7, 5, 6
-        'relative_image_path': r'01. Reconstructed\02. Angular Decimation\02. x4',
+        'folder_path': r'images\1',   #7, 5, 6
+        'relative_image_path': r'01. Reconstructed\02. Angular Decimation\01. x2',
         'image_name': 'im_00001.png',
-        'image_tag': 'ex2_300',
+        'image_tag': 'img1_500',
 
-        # 'width0': 900,
-        # 'height0': 1850,
-        # 'width': 500,
-        # 'height': 500,
+        'width0': 825 - radius,
+        'height0': 1565 - radius,
+        'width': 500 + radius,
+        'height': 500 + radius,
+        'radius': radius
     }
     make_configuration_file(cfg)
+
+    path_to_img = Path(r'C:\Users\maxxx\VSprojects\back\images\1\01. Reconstructed\02. Angular Decimation\01. x2') / 'im_00001.png'
+    img = Image(path_to_img)
+    # img.show()
+    #show_slice(img, h0=1565, w0=825, h=500, w=500)
+
+
+    #show_slice(img, h0=1010, w0=1440, h=500, w=500)
+
     # save_pair()
     # _save_annotation_json(width0=900, height0=1850, width=500, height=500, 
     #                       image_tag='im_00001_900_1850_500_500', original_image_name='im_00001.png',
