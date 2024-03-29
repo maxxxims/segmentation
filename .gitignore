@@ -8,6 +8,7 @@ backend/config/
 **.csv
 **.db
 *storage/
+_*/
 
 result**
 

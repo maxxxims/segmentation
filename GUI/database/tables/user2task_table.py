@@ -102,3 +102,10 @@ def update_metric(uuid: UUID, metric: float):
     with engine.connect() as conn:
         with conn.begin():
             conn.execute(update(User2Task).values(metric=metric).where(User2Task.uuid == uuid))
+            
+            
+def get_metric(uuid: UUID):
+    with engine.connect() as conn:
+        with conn.begin():
+            res = conn.execute(select(User2Task.metric).where(User2Task.uuid == uuid)).first()
+    return res.metric

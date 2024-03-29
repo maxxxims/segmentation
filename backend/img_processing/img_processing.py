@@ -59,13 +59,13 @@ def delete_polygons_on_last_figure(last_figure: list, original_img: np.ndarray):
     with open('tmp.png', 'rb') as f:
         last_figure['data'][0]['source'] = f'data:image/png;base64,{base64.b64encode(f.read()).decode()}'
     return last_figure
-    
 
 
-def draw_annotated_image(_img: np.ndarray, data: dict, selected_class: int) -> np.ndarray:
+def draw_annotated_image(_img: np.ndarray, data: dict, selected_class: int, json_data: dict) -> np.ndarray:
     """
         data: selected_markers_   - array with pathes
     """
+
     selected_class = int(selected_class)
     img = np.copy(_img)
 
@@ -87,7 +87,41 @@ def draw_annotated_image(_img: np.ndarray, data: dict, selected_class: int) -> n
     annotated_img = np.zeros((img.shape[0], img.shape[1]))
     annotated_img[select] = 255
 
+    position = json_data['small_image']['relative']
+    h0, w0 = position['h0'], position['w0']
+    h, w = position['h'], position['w']
+    annotated_img = annotated_img[h0:h0+h, w0:w0+w]
+    print(f'CUTTED IMG SIZE = {annotated_img.shape}')
+    
     return annotated_img
+
+
+# def OLD_draw_annotated_image(_img: np.ndarray, data: dict, selected_class: int) -> np.ndarray:
+#     """
+#         data: selected_markers_   - array with pathes
+#     """
+#     selected_class = int(selected_class)
+#     img = np.copy(_img)
+
+#     data_pathes = []
+#     for el in data:
+#         if el["type"] == "path":
+#             data_pathes.append(el)
+
+
+#     stencil = draw_pathes_another(img, data_pathes)
+#     if selected_class == 1:
+#         select = stencil == MASK_VALUE
+#         select_bg = stencil != MASK_VALUE
+
+#     else:
+#         select = stencil != MASK_VALUE
+#         select_bg = stencil == MASK_VALUE
+    
+#     annotated_img = np.zeros((img.shape[0], img.shape[1]))
+#     annotated_img[select] = 255
+
+#     return annotated_img
 
 
 

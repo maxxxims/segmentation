@@ -38,8 +38,8 @@ def parse_path_to_save(path_to_save: Path, file_name: str) -> Path:
     path_to_result_folder.mkdir(parents=True, exist_ok=True)
     return path_to_result_folder
 
-
-def save_annotation(img: np.ndarray, data: dict,  data_json: dict, path_to_save: Path,
+"""
+def OLD_save_annotation(img: np.ndarray, data: dict,  data_json: dict, path_to_save: Path,
                     folder_name: str, selected_class: int = 1,) -> tuple:
     
     data_pathes = []
@@ -92,8 +92,42 @@ def save_annotation(img: np.ndarray, data: dict,  data_json: dict, path_to_save:
         json.dump(data_json, f)
 
     return path_to_result_folder, data_json
+"""
+def save_annotation(annotated_image: np.ndarray, data: dict,  data_json: dict, path_to_save: Path,
+                    folder_name: str) -> tuple:
+    path_to_result_folder = path_to_save / folder_name
+    path_to_result_folder.mkdir(parents=True, exist_ok=True)
+    png_save_path = path_to_result_folder / f'{data_json["image_tag"]}.png'
 
+    # save png
+    plt.imsave(png_save_path, annotated_image, cmap='gray')
 
+    # save json
+    json_save_path = path_to_result_folder / 'result.json'
+
+    
+    y_1_class, x_1_class = np.where(annotated_image > 0)
+    y_0_class, x_0_class = np.where(annotated_image == 0)
+    
+    shape0, shape1 = annotated_image.shape[0], annotated_image.shape[1]
+
+    data_for_save = {
+        'shapes': data,
+        "y_1_class": y_1_class.tolist(),
+        "x_1_class": x_1_class.tolist(),
+        "y_0_class": y_0_class.tolist(),
+        "x_0_class": x_0_class.tolist(),
+        "shape0": shape0,
+        "shape1": shape1
+    }
+
+    for key, value in data_for_save.items():
+        data_json[key] = value
+
+    with open(json_save_path, 'w') as f:
+        json.dump(data_json, f)
+
+    return path_to_result_folder, data_json
 
 
 def draw_pathes(_img: np.ndarray, data: list[dict]):
@@ -123,7 +157,7 @@ def draw_pathes(_img: np.ndarray, data: list[dict]):
 
 
 
-def check_annotation(data: dict, selected_color: int, save_acc: bool = False,
+def OLD_check_annotation(data: dict, selected_color: int, save_acc: bool = False,
                       path_to_save: bool = False, n_segments: int = -1):
     """
     :param data: json file with annotation to download file
@@ -168,3 +202,21 @@ def check_annotation(data: dict, selected_color: int, save_acc: bool = False,
 
     #return acc, diffrence  
     return acc['Accuracy'], original_img
+
+
+
+def check_annotation(data: dict, annotated_image: np.ndarray):
+    """
+    :param data: json file with annotation to download file
+    :param annotated_image: annotated image
+    """
+    ground_truth_path = Path(data["annotatated_path"])
+    ground_truth_img = Image(data=np.load(ground_truth_path))
+    ground_truth_img.data[ground_truth_img.data > 0] = 1
+    annotated_image[annotated_image > 0] = 1
+    acc = Evaluator.evaluate(ground_truth_img, Image(data=annotated_image), [], None, Accuracy)
+    # diffrence = np.zeros_like(annotated_image)
+    # diffrence[annotated_image != ground_truth_img.data] = 1
+    # print(f'MY CALCT ACC = {np.sum(diffrence == 0) / diffrence.size}; size = {diffrence.size}')
+    
+    return acc['Accuracy'], ground_truth_img

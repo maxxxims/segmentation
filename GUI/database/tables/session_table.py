@@ -62,6 +62,39 @@ def get_fill_opacity(username: str) -> float:
     return opacity
 
 
+def get_zoom_value(username: str) -> float:
+    with engine.connect() as conn:
+        zoom_value = conn.execute(select(Session.zoom_value).where(Session.username == username)).scalar_one()
+    return zoom_value
+
+
+def get_wheel_zoom(username: str) -> bool:
+    with engine.connect() as conn:
+        wheel_zoom = conn.execute(select(Session.wheel_zoom).where(Session.username == username)).scalar_one()
+    return wheel_zoom
+
+def get_opened_settings(username: str) -> bool:
+    with engine.connect() as conn:
+        opened_settings = conn.execute(select(Session.opened_settings).where(Session.username == username)).scalar_one()
+    return opened_settings
+
+def update_opened_settings(username: str, opened_settings: bool):
+    with engine.connect() as conn:
+        with conn.begin():
+            conn.execute(update(Session).values(opened_settings=opened_settings).where(Session.username == username))
+
+def update_wheel_zoom(username: str, wheel_zoom: bool):
+    with engine.connect() as conn:
+        with conn.begin():
+            conn.execute(update(Session).values(wheel_zoom=wheel_zoom).where(Session.username == username))
+
+
+def update_zoom_value(username: str, zoom_value: int):
+    with engine.connect() as conn:
+        with conn.begin():
+            conn.execute(update(Session).values(zoom_value=zoom_value).where(Session.username == username))
+
+
 def update_fill_opacity(username: str, opacity: int):
     with engine.connect() as conn:
         with conn.begin():

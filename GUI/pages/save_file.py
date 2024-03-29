@@ -11,6 +11,7 @@ from GUI.database import session_table, image_table, figure_table, user2task_tab
 from GUI.utils import login_required, finish_task
 from flask import request
 from pathlib import Path
+import dash_bootstrap_components as dbc
 
 
 dash.register_page(__name__, path = '/annotation_background')
@@ -34,7 +35,14 @@ config = {
 }
 
 # Build App
-def layout():
+@login_required
+def layout(username):
+    acccuracy = DEFAULT_ACCURACY
+    current_task_uuid = user2task_table.get_current_task_uuid(username=username)
+    if current_task_uuid is not None:
+        acccuracy = user2task_table.get_metric(uuid=current_task_uuid)
+        if acccuracy is not None:   acccuracy = round(acccuracy, 4)
+        else:   acccuracy = DEFAULT_ACCURACY
     layout = html.Div(
         [   
             html.Div(
@@ -42,33 +50,35 @@ def layout():
                 children=[html.B(children="Marked segments: "),
                         html.Span(children=DEFAULT_MARKED_SEGMENTS, id="text-marked-segments-2"),
                         html.Br(),
+            
+                        html.P(children=[
+                            html.B('Accuracy:   '), html.Span(id='result-accuracy', children=acccuracy),
+                            html.Br(),
+                            html.P(id='low-accuracy-msg', style={'color': 'red'}),
+                        ]),
                         html.Div(
                             [
-                                html.Button("SAVE IMAGE", id="button-save-annotated-img", n_clicks=0, style={'width': '10%'}),
+                                dbc.Button("SAVE IMAGE", id="button-save-annotated-img", n_clicks=0, style={'width': '10%'}, color="success", className="me-1"),
                             ], style={'display': 'flex', 'margin-top': '15px'},
                     
                         ),
-                        html.P(children=[
-                            html.B('Accuracy:   '), html.Span(id='result-accuracy', children=DEFAULT_ACCURACY)
-                        ]),
-            
                         html.Div(id='container-result-annotated-img', children=[])
 
                         ],
                         
-                style={'margin-left': '5%', 'font-size': '20px', 'line-height': '0.8'}
+                style={'margin-left': '5%', 'font-size': '20px', }#'line-height': '0.8'
             ),
-            
-            html.Button("Load polygons", id="button-img-show-polygons", n_clicks=0, style={'display': 'none'}),
 
             
-            html.Div(id="container-img-annotated", children=[
+            html.Center(id="container-img-annotated", children=[
                 dcc.Graph(id="graph-pic-annotated", figure=default_figure, config=config),
                 html.Pre(id="annotations-data-pre"),
 
-            ]),
+            ], style={'justify-content': 'center'},
+                     ),
+            html.Button(id='button-img-show-polygons', hidden=True)
             
-        ]
+        ], style={'justify-content': 'center'},
     )
     return layout
 
@@ -88,7 +98,8 @@ def show_image(n_clicks, figure, username):
         marker_class_1 = figure_table.get_marker_class_1(username=username)
         img = image_table.get_image(username=username)
         selected_class = session_table.get_selected_class(username=username)
-        img_annotated = draw_annotated_image(_img=img, data=marker_class_1, selected_class=selected_class)
+        json_data = figure_table.get_json_data(username=username)
+        img_annotated = draw_annotated_image(_img=img, data=marker_class_1, selected_class=selected_class, json_data=json_data)
         fig = px.imshow(img_annotated, binary_string=True, width=800, height=800)
         fig.update_layout(dragmode="drawclosedpath")
         return fig, len(marker_class_1)
@@ -100,10 +111,10 @@ def show_image(n_clicks, figure, username):
     
 
 @callback(
-    # Output('text-save-annotated-img', 'children'),
-    # Output('button-check-annotated-img', 'style'),
     Output('result-accuracy', 'children'),
+    Output('low-accuracy-msg', 'children'),
     Input("button-save-annotated-img", "n_clicks"),
+    running=[(Output("button-save-annotated-img", "disabled"), True, False)],
     prevent_initial_call=True
 )
 @login_required
@@ -111,10 +122,11 @@ def save_annotated_img(n_clicks, username):
     task_uuid = user2task_table.get_current_task_uuid(username=username)
     marker_class_1 = figure_table.get_marker_class_1(username=username)
     last_figure = figure_table.get_last_figure(username=username)
+    selected_class = session_table.get_selected_class(username=username)
     
     if marker_class_1 is None or last_figure is None:
         buttons_syles['display'] = 'none'
-        return "not checked yet"
+        return "not checked yet", no_update
     
     img = image_table.get_image(username=username)
     json_data = figure_table.get_json_data(username=username)
@@ -125,66 +137,29 @@ def save_annotated_img(n_clicks, username):
     # path_to_save_folder.mkdir(parents=True, exist_ok=True)
     image_name = current_task.image_name
     folder_name = f'{image_name}_{attempt_number}'
+    
+    """"""
     #SAVE ANNOTATION
-    path_to_save, data_json = save_annotation(img=img, data=marker_class_1,
+    annotated_image = draw_annotated_image(_img=img, data=marker_class_1, selected_class=selected_class, json_data=json_data)
+    path_to_save, data_json = save_annotation(annotated_image=annotated_image, data=marker_class_1,
                     data_json=json_data, path_to_save=path_to_save_folder, folder_name=folder_name)
     
     # CALCULATE ACCUARACY
-    selected_class = session_table.get_selected_class(username=username)
-    accuracy, segmented_img = check_annotation(json_data, selected_color=selected_class,
-                                        save_acc=False, path_to_save=path_to_save)
+    accuracy, gt_img = check_annotation(json_data, annotated_image)
     json_data['accuracy'] = accuracy
-    
+    """"""
     
     figure_table.save_json_data(username=username, json_data=data_json)
     user2task_table.update_metric(task_uuid, metric=accuracy)    
     user2task_table.update_save_folder(username=username, uuid=task_uuid, save_folder=str(path_to_save_folder))
     session_table.update_save_path(username=username, save_path=str(path_to_save))
-    finish_task(username)
-    
-    buttons_syles['display'] = 'block'
-    return round(accuracy, 2)
+    user2task_table.update_finished(username=username, uuid=task_uuid, finished=True)
+    #finish_task(username)
+
+    if accuracy < 0.8:
+        return round(accuracy, 4), f'Low accuracy, please try again. Maybe you have chosen wrong class. It can be changed on the Annotation page'
+    return round(accuracy, 4), no_update    
 
 """
 
 """
-
-# @callback(
-#     Output('container-result-annotated-img', 'children'),
-#     Output('result-accuracy', 'children'),
-#     Input("button-check-annotated-img", "n_clicks"),
-#     prevent_initial_call=True
-# )
-# @login_required
-def check_annotation_img(n_clicks, username):
-    global DEFAULT_ACCURACY
-    json_data = figure_table.get_json_data(username=username)
-    if json_data is not None:
-        if n_clicks > 0 and n_clicks %2 == 0:
-            return html.Div(), DEFAULT_ACCURACY
-        
-        marker_class_1 = figure_table.get_marker_class_1(username=username)
-        selected_class = session_table.get_selected_class(username=username)
-        path_to_save = session_table.get_save_path(username=username)
-        n_segments = -1
-        if marker_class_1 is not None:
-            n_segments = len(marker_class_1)
-
-        metrics, img = check_annotation(json_data, selected_color=selected_class,
-                                        save_acc=True, path_to_save=path_to_save,
-                                        n_segments=n_segments)
-        
-        # print(f'ACCURACY = {metrics}')
-        DEFAULT_ACCURACY = metrics['Accuracy']
-        fig = px.imshow(img.data, binary_string=True, width=800, height=800)
-        return html.Div(
-            [
-                # html.H3(f"Accuracy = {metrics['Accuracy']}"),
-                html.P("""In the image below the same as you've saved now.
-                        To remove this image, click again "CHEK ANNOTATION" """),
-                dcc.Graph(figure=fig)
-            ]
-        ), metrics['Accuracy']
-    
-    else:
-        return html.H4("Image wasn't loaded from json", style={'color': 'red'}), DEFAULT_ACCURACY

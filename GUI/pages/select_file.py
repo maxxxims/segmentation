@@ -1,19 +1,15 @@
 from uuid import UUID
-from dash import Dash, dcc, html, Input, Output, State, callback, no_update, dash_table
-import plotly.express as px
+from dash import Dash, dcc, html, Input, Output, State, callback, no_update, dash_table, ctx
 import dash
 from backend import Image, parse_json_file
 import io
 import json
 from PIL import Image as IMG
-import base64
 import numpy as np
 from matplotlib import pyplot as plt
 from GUI.database import session_table, image_table, figure_table, task_table, user2task_table
 from GUI.utils import login_required, update_current_task
-from flask import request
 import dash_bootstrap_components as dbc
-
 
 
 dash.register_page(__name__, path = '/choose_file')
@@ -63,7 +59,10 @@ def get_info_table(username: str):
                       'Is finished': finished, 'Accuracy': metric, ' ': 'click to choose'})
     
     table = html.Div([
-        html.Span(f'Finished: {finished_task_number} / {len(user_tasks)}'), html.Br(),
+        html.Span(children=[
+            html.B(f'Finished: '), html.Span(f'{finished_task_number} / {len(user_tasks)}'), html.Br(),
+        ]),
+        
         html.Span('Click on the last column to choose a task (including finished ones to remake)'),
         dash_table.DataTable(tasks, id='tasks-table', columns=[{'name': col, 'id': col} for col in cols],
                                  cell_selectable=True, style_header={'textAlign': 'center', 'font-weight': 'bold'},
@@ -71,16 +70,18 @@ def get_info_table(username: str):
     ])
     return table
 
-
-def layout():
+@login_required
+def layout(username: str):
+    current_task_uuid = user2task_table.get_current_task_uuid(username=username)
+    if current_task_uuid is not None:   current_task_uuid = str(current_task_uuid)
     layout = html.Div([
         html.Div(id='output-image-upload-default2'),
         html.Div(id='dropdown-menu2',
                  children=[
-                    dcc.Dropdown(id='select-task', options=get_available_tasks(),
+                    dcc.Dropdown(id='select-task', options=get_available_tasks(), value=current_task_uuid,
                                  style={'margin-left': 'auto', 'margin-right': 'auto' },
                                  placeholder='Select task'),
-                    html.Div(id='uploaded-img')
+                    html.Center(id='uploaded-img')
                      ], style={'width': '30%', 'margin-left': 'auto', 'margin-right': 'auto'}),
         html.Div(id='main-cnt', children=[        
         html.Div(id='output-image-upload'),
@@ -117,10 +118,11 @@ def show_image(username: str, file_name: str):
     Output('uploaded-img', 'children', allow_duplicate=True),
     Input('select-task', 'value'),
     prevent_initial_call='initial_duplicate'
+    # prevent_initial_call=True
 )
 @login_required
 def choose_task(task_uuid: str, username: str):
-    if task_uuid is not None:
+    if task_uuid is not None and ctx.triggered_id is not None:
         task_uuid = UUID(task_uuid)
         new_task = user2task_table.get_task_by_uuid(task_uuid) #task_table.get_task_by_id(task_id)
         with open(new_task.path_to_json, 'r') as file:
@@ -130,7 +132,8 @@ def choose_task(task_uuid: str, username: str):
     
     if session_table.is_loaded_image(username):
         json_data = figure_table.get_json_data(username=username)
-        file_name = json_data['image_tag'] + '.json'
+        atempt_number = user2task_table.get_current_task_attempt_number(username=username)
+        file_name = json_data['image_tag'] + f' attempt {atempt_number}'#'.json'
         return show_image(username, file_name)
     else:
         return html.Div(children=[html.H3('Image is not loaded yet', style={'text-align': 'center'})])

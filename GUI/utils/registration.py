@@ -19,8 +19,10 @@ def make_tasks_from_folder(path_to_folder: Path, path_to_input_folder: Path):
                 config_file = json.load(file)
             image_name = config_file['image_tag']
             path_to_json = str(path_to_folder / f_name)
-            path_to_image = str(path_to_input_folder / f'{image_name}.npy')
-            path_to_annotated_image = str(path_to_input_folder / f'{image_name}_annotated.npy')
+            # path_to_image = str(path_to_input_folder / f'{image_name}.npy')
+            # path_to_annotated_image = str(path_to_input_folder / f'{image_name}_annotated.npy')
+            path_to_image = config_file['image_full_path']
+            path_to_annotated_image = config_file['annotatated_path']
             task_table.add_task(image_name=image_name, path_to_json=path_to_json,
                         path_to_image=path_to_image,
                         path_to_annotated_image=path_to_annotated_image)

@@ -7,33 +7,39 @@ from .database import user_table, session_table, task_table, user2task_table
 from .utils import get_users, add_tasks_to_users, register_user, make_tasks_from_folder
 import dash_auth
 from .config import Config
+import dash_bootstrap_components as dbc
 
 
 server = Flask(__name__)
-app = Dash(__name__, use_pages=True, server=server, url_base_pathname='/')
-
+app = Dash(__name__, use_pages=True, server=server, url_base_pathname='/',
+           external_stylesheets=[dbc.themes.BOOTSTRAP],)
+# app.css.append_css(
+#     {'external_url': 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css'}
+# )
 
 button_styles = {'margin-left': '40px', 'width': '10%', 'height': 'auto'}
+BTN_COLOR = 'info'
+outline = True
+NAVBAR_COLOR='light'
+
+navbar = dbc.Navbar(
+    html.H1('Image annotation tools for semantic segmentation', style={'textAlign': 'center'},
+    ),
+    color=NAVBAR_COLOR,
+    dark=True, style={'text-align': 'center', 'justify-content': 'center'}, 
+)
 
 app.layout = html.Div([
-    html.H1('Image annotations tools for semantic segmentation', style={'textAlign': 'center'}),
-    html.Div(id='navigate-bar', children=[
-        html.Button(style=button_styles, children=[html.A("Tutorial", href='/tutorial')]),
-        html.Button(style=button_styles, children=[html.A("Choose File", href='/choose_file')]),
-        html.Button(style=button_styles, children=[html.A("Annotation", href='/annotation')]),
-        html.Button(style=button_styles, children=[html.A("Save file", href='/annotation_background')]),
+    navbar,
+    dbc.Navbar(id='navigate-bar', children=[
+        dbc.Button(style=button_styles, color=BTN_COLOR, children='Tutorial', href=Config.get_tutorial_url(), outline=outline),
+        dbc.Button(style=button_styles, color=BTN_COLOR, children='Select File', href='/choose_file', outline=outline),
+        dbc.Button(style=button_styles, color=BTN_COLOR, children='Annotation', href='/annotation', outline=outline),
+        dbc.Button(style=button_styles, color=BTN_COLOR, children='Save file', href='/annotation_background', outline=outline),
 
-
-    ], style={'display': 'flex', 'justify-content': 'center', 'margin-bottom': '20px'}),
+    ], style={'display': 'flex', 'justify-content': 'center', 'margin-bottom': '5px'}, color=NAVBAR_COLOR),
     dash.page_container
 ], style={'margin-bottom': '100px'})
-
-
-
-@server.route('/tutorial')
-def test():
-    return render_template('tutorial0.html')
-
 
 
 if __name__ == '__main__':
@@ -51,31 +57,9 @@ if __name__ == '__main__':
     #     print(el)
     
     
-    drop_redis()
-    
+    drop_redis() 
     drop_db()
     init_db()
-    # user_table.add_user(username='admin', password='admin')
-    # user_table.add_user(username='admin2', password='admin2')
-    
-    # session_table.create_session(username='admin')
-    # session_table.create_session(username='admin2')
-    
-    # task_table.add_task(image_name='ex0_300', path_to_json='data/ex0_300.json',
-    #                     path_to_image='data/input/ex0_300.npy', path_to_annotated_image='data/input/ex0_300_annotated.npy')
-    # task_table.add_task(image_name='ex1_300', path_to_json='data/ex1_300.json',
-    #                     path_to_image='data/input/ex1_300.npy', path_to_annotated_image='data/input/ex1_300_annotated.npy')
-    # task_table.add_task(image_name='ex2_300', path_to_json='data/ex2_300.json',
-    #                     path_to_image='data/input/ex2_300.npy', path_to_annotated_image='data/input/ex2_300_annotated.npy')
-    # task_table.add_task(image_name='ex3_300', path_to_json='data/ex3_300.json',
-    #                     path_to_image='data/input/ex3_300.npy', path_to_annotated_image='data/input/ex3_300_annotated.npy')
-    
-    
-    # user2task_table.add_task(username='admin', task_id=1)
-    # user2task_table.add_task(username='admin', task_id=3)
-    
-    # user2task_table.add_task(username='admin2', task_id=1)
-    
     register_user(username='admin', passwrod='admin')
     register_user(username='user1', passwrod='123')
     make_tasks_from_folder(path_to_folder=Path('data'), path_to_input_folder=Path('data/input'))
@@ -93,7 +77,6 @@ if __name__ == '__main__':
     2) Сделать новые образцы для разметки 4-5 штук
     3) Развертка на сервере, добавление пользователей +-
     4) Дизайн   
-    6) просмотр полноразмерного изображения
     """
     
     

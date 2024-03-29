@@ -25,3 +25,6 @@ class Config:
     @classmethod
     def get_redis_password(cls):
         return os.getenv('REDIS_PASSWORD')
+    @classmethod
+    def get_tutorial_url(cls):
+        return os.getenv('TUTORIAL_URL')
