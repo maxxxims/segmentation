@@ -1,0 +1,28 @@
+{
+  "folder_path": "images\\0",
+  "relative_image_path": "01. Reconstructed\\02. Angular Decimation\\01. x2",
+  "image_name": "im_00001.png",
+  "image_tag": "img2_300",
+  "big_image": {
+    "h0": 1657,
+    "w0": 935,
+    "h": 600,
+    "w": 600
+  },
+  "small_image": {
+    "relative": {
+      "h0": 150,
+      "w0": 150,
+      "h": 300,
+      "w": 300
+    },
+    "absolute": {
+      "h0": 1807,
+      "w0": 1085,
+      "h": 300,
+      "w": 300
+    }
+  },
+  "image_full_path": "data\\input\\img2_300_full.npy",
+  "annotatated_path": "data\\input\\img2_300_annotated.npy"
+}

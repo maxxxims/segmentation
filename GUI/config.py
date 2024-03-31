@@ -28,3 +28,7 @@ class Config:
     @classmethod
     def get_tutorial_url(cls):
         return os.getenv('TUTORIAL_URL')
+    
+    @classmethod
+    def get_admin_password(cls):
+        return os.getenv('ADMIN_PASSWORD')

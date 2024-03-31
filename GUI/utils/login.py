@@ -1,5 +1,7 @@
-from ..database import user_table
+from ..database import user_table, session_table
 from flask import request
+import pandas as pd
+from ..config import Config
 
 
 def get_users():
@@ -7,7 +9,6 @@ def get_users():
     users = user_table.get_users()
     for u in users:
         user_pwd[u.username] = u.password
-    print(user_pwd)
     return user_pwd
 
 
@@ -21,3 +22,20 @@ def login_required(func: callable):
             return func(username=username, *args, **kwargs)
         
     return wrapper
+
+
+
+def register_admin():
+    user_table.add_user(username='admin', password=Config.get_admin_password())
+
+def register_users_from_csv(path_to_csv):
+    df = pd.read_csv(path_to_csv, na_values='None', sep=';')
+    for index, row in df.iterrows():
+        name = row['name'] if pd.notna(row['name']) else None
+        user_table.add_user(username=row['username'], password=row['password'], name=name) 
+
+
+def start_sessions():
+    users = user_table.get_users()
+    for u in users:
+        session_table.create_session(username=u.username)

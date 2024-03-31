@@ -14,6 +14,8 @@ result**
 
 main.py
 3d_img.py
+/data/output/
 
+!/data/output/empty
 !.empty
 !GUI/static/*.png

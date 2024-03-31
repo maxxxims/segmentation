@@ -215,8 +215,11 @@ def check_annotation(data: dict, annotated_image: np.ndarray):
     ground_truth_img.data[ground_truth_img.data > 0] = 1
     annotated_image[annotated_image > 0] = 1
     acc = Evaluator.evaluate(ground_truth_img, Image(data=annotated_image), [], None, Accuracy)
-    # diffrence = np.zeros_like(annotated_image)
-    # diffrence[annotated_image != ground_truth_img.data] = 1
+    diffrence = np.zeros_like(annotated_image)
+    diffrence[annotated_image != ground_truth_img.data] = 1
+    # plt.imsave('diffrence.png', diffrence, cmap='gray')
+    # plt.imsave('annotated.png', annotated_image, cmap='gray')
+    # plt.imsave('ground_truth.png', ground_truth_img.data, cmap='gray')
     # print(f'MY CALCT ACC = {np.sum(diffrence == 0) / diffrence.size}; size = {diffrence.size}')
     
     return acc['Accuracy'], ground_truth_img
