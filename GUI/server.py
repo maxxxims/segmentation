@@ -57,16 +57,16 @@ if __name__ == '__main__':
     #     print(el)
     
     
-    drop_redis() 
-    drop_db()
-    init_db()
+    # drop_redis() 
+    # drop_db()
+    # init_db()
     #register_user(username='admin', passwrod='admin')
     # register_user(username='user1', passwrod='123')
-    register_admin()
-    register_users_from_csv('users.csv')
-    start_sessions()
-    make_tasks_from_folder(path_to_folder=Path('data'), path_to_input_folder=Path('data/input'))
-    add_tasks_to_users(attempts_per_user=3)
+    # register_admin()
+    # register_users_from_csv('users.csv')
+    # start_sessions()
+    # make_tasks_from_folder(path_to_folder=Path('data'), path_to_input_folder=Path('data/input'))
+    # add_tasks_to_users(attempts_per_user=3)
     
     auth = dash_auth.BasicAuth(
                                 app,
@@ -75,11 +75,3 @@ if __name__ == '__main__':
     HOST = Config.get_gui_host()
     PORT = Config.get_gui_port()
     app.run(host=HOST, port=PORT, debug=True)
-    
-    """
-    2) Сделать новые образцы для разметки 4-5 штук
-    3) Развертка на сервере, добавление пользователей +-
-    4) Дизайн   
-    """
-    
-    
