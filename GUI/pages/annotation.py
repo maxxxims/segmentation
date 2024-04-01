@@ -73,7 +73,14 @@ def layout(username:  str):
     cfg = config
     cfg['scrollZoom'] = wheel_zoom
     # print(f'opacity = {fill_opacity}')
-    logging.info(f'LAST FIGURE IS NONE ={figure_table.get_last_figure(username=username) is None} FROM USER = {username}')
+    # logging.info(f'LAST FIGURE IS NONE ={figure_table.get_last_figure(username=username) is None} FROM USER = {username}')
+    last_figure = figure_table.get_last_figure(username=username)
+    n_marked_segments = 0
+    if last_figure is None:
+        last_figure = default_figure
+    else:    
+        marker_class_1 = figure_table.get_marker_class_1(username=username)
+        if marker_class_1 is not None:  n_marked_segments = len(marker_class_1)
     row1 = dbc.Row([
         dbc.Col(
             [
@@ -120,7 +127,7 @@ def layout(username:  str):
         
         dbc.Col([
             html.B(children="Marked segments: "),
-            html.Span(children='0', id="text-marked-segments"), #html.Br(),
+            html.Span(children=n_marked_segments, id="text-marked-segments"), #html.Br(),
         ], width=4, style={'font-size': '20px'}),
         
         dbc.Col([
@@ -140,7 +147,7 @@ def layout(username:  str):
             ]),
         
             html.Center(id="container-img", children=[   #style={'widhth': '800px', 'height': 'auto'},
-                dcc.Graph(id="graph-pic", figure=get_figure(default_figure), config=cfg),
+                dcc.Graph(id="graph-pic", figure=last_figure, config=cfg),
                 html.Div(
                     style={'justify-content': 'center'},
                     children=[
@@ -353,7 +360,7 @@ def show_preview(n_clicks1, n_clicks2, username):
     Output('text-marked-segments', 'children'),
     Input("graph-pic", "relayoutData"),
     State("graph-pic", "figure"),
-    # prevent_initial_call=True
+    prevent_initial_call=True
     
 )
 def on_new_annotation(relayout_data, figure, allow_duplicate=True):

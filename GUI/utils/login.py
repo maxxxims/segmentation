@@ -16,10 +16,11 @@ def get_users():
 
 def login_required(func: callable):
     def wrapper(*args, **kwargs):
-        username = request.authorization['username']
-        if username is None:
+        authorization = request.authorization
+        if authorization is None:
             raise html.P('unauthorized')#Exception('Login required')
         else:
+            username = authorization['username']
             return func(username=username, *args, **kwargs)
         
     return wrapper
