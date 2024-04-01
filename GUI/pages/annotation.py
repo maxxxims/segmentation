@@ -77,7 +77,7 @@ def layout(username:  str):
     last_figure = figure_table.get_last_figure(username=username)
     n_marked_segments = 0
     if last_figure is None:
-        last_figure = default_figure
+        last_figure = get_figure(default_figure)
     else:    
         marker_class_1 = figure_table.get_marker_class_1(username=username)
         if marker_class_1 is not None:  n_marked_segments = len(marker_class_1)
