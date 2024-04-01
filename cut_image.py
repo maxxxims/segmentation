@@ -71,8 +71,8 @@ def save_cfg(cfg: dict, save_path: Path):
 
 def cuut_one_img(img_number: int, img_save_name: int, center_point=None):
     cfg = {
-        'folder_path': r'images\{}'.format(img_number),   #7, 5, 6
-        'relative_image_path': r'01. Reconstructed\02. Angular Decimation\01. x2',
+        'folder_path': 'images/{}'.format(img_number),   #7, 5, 6
+        'relative_image_path': '01. Reconstructed/02. Angular Decimation/01. x2',
         'image_name': 'im_00001.png', #im_02086
         'image_tag': f'img{img_save_name}_300',
     }
