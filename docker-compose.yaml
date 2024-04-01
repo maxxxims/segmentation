@@ -7,7 +7,7 @@ services:
 
   segmentation:
     build: .
-    command: python3 -m GUI.server
+    command: python3 -m GUI.start_db && python3 -m GUI.server
     restart: always
     volumes:
       - .:/usr/src/app
