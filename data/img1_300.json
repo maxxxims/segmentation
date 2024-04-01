@@ -23,6 +23,6 @@
       "w": 300
     }
   },
-  "image_full_path": "data\\input\\img1_300_full.npy",
-  "annotatated_path": "data\\input\\img1_300_annotated.npy"
+  "image_full_path": "data/input/img1_300_full.npy",
+  "annotatated_path": "data/input/img1_300_annotated.npy"
 }
