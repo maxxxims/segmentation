@@ -4,7 +4,7 @@ from backend import draw_annotations
 import plotly.graph_objects as go
 
 
-def get_zoomed_figure(image: np.ndarray, json_data: dict, newshape: dict, zoom_level: float = 0.95):
+def get_zoomed_figure(image: np.ndarray, json_data: dict, newshape: dict, zoom_level: float = 0.85):
     figure = px.imshow(image, binary_string=True, height=800)
     figure.update_layout(dragmode="drawopenpath", newshape=newshape)
     data = json_data['small_image']['relative']
