@@ -12,6 +12,7 @@ from GUI.utils import login_required, finish_task
 from flask import request
 from pathlib import Path
 import dash_bootstrap_components as dbc
+import logging
 
 
 dash.register_page(__name__, path = '/annotation_background')
@@ -93,8 +94,10 @@ def layout(username):
 @login_required
 def show_image(n_clicks, figure, username):
     #print(f'username = {username} - {n_clicks}')
+    
     last_figure = figure_table.get_last_figure(username=username)
-    print(f'LAST FIGURE IS NONE ={last_figure is None} FROM USER = {username}')
+    logging.info(f'LAST FIGURE IS NONE ={last_figure is None} FROM USER = {username}')
+    # print(f'LAST FIGURE IS NONE ={last_figure is None} FROM USER = {username}')
     if last_figure is not None:
         marker_class_1 = figure_table.get_marker_class_1(username=username)
         img = image_table.get_image(username=username)

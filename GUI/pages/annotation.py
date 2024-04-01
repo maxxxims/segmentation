@@ -1,3 +1,4 @@
+import logging
 import plotly.express as px
 from dash import Dash, dcc, html, Input, Output, no_update, callback, State, ctx
 import dash_bootstrap_components as dbc
@@ -72,7 +73,7 @@ def layout(username:  str):
     cfg = config
     cfg['scrollZoom'] = wheel_zoom
     # print(f'opacity = {fill_opacity}')
-    
+    logging.info(f'LAST FIGURE IS NONE ={figure_table.get_last_figure(username=username) is None} FROM USER = {username}')
     row1 = dbc.Row([
         dbc.Col(
             [
