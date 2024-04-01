@@ -1,18 +1,18 @@
 {
-  "folder_path": "images/0",
-  "relative_image_path": "01. Reconstructed/02. Angular Decimation/01. x2",
+  "folder_path": "images\\0",
+  "relative_image_path": "01. Reconstructed\\02. Angular Decimation\\01. x2",
   "image_name": "im_00001.png",
   "image_tag": "img1_300",
   "big_image": {
-    "h0": 790,
-    "w0": 1300,
-    "h": 600,
-    "w": 600
+    "h0": 880,
+    "w0": 1390,
+    "h": 420,
+    "w": 420
   },
   "small_image": {
     "relative": {
-      "h0": 150,
-      "w0": 150,
+      "h0": 60,
+      "w0": 60,
       "h": 300,
       "w": 300
     },
@@ -23,6 +23,6 @@
       "w": 300
     }
   },
-  "image_full_path": "data/input/img1_300_full.npy",
-  "annotatated_path": "data/input/img1_300_annotated.npy"
+  "image_full_path": "data\\input\\img1_300_full.npy",
+  "annotatated_path": "data\\input\\img1_300_annotated.npy"
 }

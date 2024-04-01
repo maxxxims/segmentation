@@ -74,12 +74,12 @@ def cuut_one_img(img_number: int, img_save_name: int, center_point=None):
         'folder_path': r'images\{}'.format(img_number),   #7, 5, 6
         'relative_image_path': r'01. Reconstructed\02. Angular Decimation\01. x2',
         'image_name': 'im_00001.png', #im_02086
-        'image_tag': f'img{img_save_name}_500',
+        'image_tag': f'img{img_save_name}_300',
     }
     save_folder = Path('data')
     path_to_img = Path(r'C:\Users\maxxx\VSprojects\back\images') / f'{img_number}' / cfg['relative_image_path'] / 'im_00001.png'
     img = Image(path_to_img)
-    cfg = make_big_img(img, radius=300, slice_radius=150, cfg=cfg, path_to_save=save_folder / 'input', center_point=center_point, save=True) 
+    cfg = make_big_img(img, radius=210, slice_radius=150, cfg=cfg, path_to_save=save_folder / 'input', center_point=center_point, save=True) 
     img_gt = Image(Path(r'C:\Users\maxxx\VSprojects\back\images\{}\02. Segmented\00. Original'.format(img_number)) / 'im_00001.png')
     cfg = save_gt_image(img_gt, cfg, save_folder / 'input')
     save_cfg(cfg, save_folder)
@@ -88,8 +88,12 @@ def cuut_one_img(img_number: int, img_save_name: int, center_point=None):
 
 if __name__ == '__main__':
     ...
+    cuut_one_img(0, 0, center_point=None)
+    cuut_one_img(0, 1, center_point=(790+300, 1300+300))
+    cuut_one_img(0, 2, center_point=(1957, 1235))
+    cuut_one_img(0, 3, center_point=(2715, 1495))
     # for i in range(6, 7):
-    #    cuut_one_img(i)
+    #    cuut_one_img(0, 0, center_point=None)
     # center_point=(2715, 1495)#(1957, 1235)
     # cuut_one_img(0, 3, center_point=center_point)
 
