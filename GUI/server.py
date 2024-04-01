@@ -62,10 +62,11 @@ if __name__ == '__main__':
     # init_db()
     #register_user(username='admin', passwrod='admin')
     # register_user(username='user1', passwrod='123')
-    # register_admin()
+    
     # drop_redis() 
     drop_db()
     init_db()
+    register_admin()
     register_users_from_csv('users.csv')
     start_sessions()
     make_tasks_from_folder(path_to_folder=Path('data'), path_to_input_folder=Path('data/input'))
