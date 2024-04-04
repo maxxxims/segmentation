@@ -12,7 +12,7 @@ def save_image(username: str, img: np.ndarray):
 def get_image(username: str) -> np.ndarray:
     if not hasattr(dash.get_app(), 'image_storage'):
         return None
-    return dash.get_app().image_storage[username]
+    return dash.get_app().image_storage.get(username, None)
 
 # def save_image(username: str, img: np.ndarray):
 #     path_to_save = Path(f'GUI/storage/{username}')

@@ -2,6 +2,8 @@ from ..database import user_table, session_table
 from flask import request
 import pandas as pd
 from ..config import Config
+from dash import html
+
 
 
 def get_users():
@@ -12,13 +14,13 @@ def get_users():
     return user_pwd
 
 
-
 def login_required(func: callable):
     def wrapper(*args, **kwargs):
-        username = request.authorization['username']
-        if username is None:
-            raise Exception('Login required')
+        authorization = request.authorization
+        if authorization is None:
+            raise html.P('unauthorized')#Exception('Login required')
         else:
+            username = authorization['username']
             return func(username=username, *args, **kwargs)
         
     return wrapper

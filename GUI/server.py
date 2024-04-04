@@ -8,6 +8,19 @@ from .utils import get_users, add_tasks_to_users, register_user, make_tasks_from
 import dash_auth
 from .config import Config
 import dash_bootstrap_components as dbc
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
+
+
+drop_db()
+init_db()
+register_admin()
+register_users_from_csv('users.csv')
+start_sessions()
+make_tasks_from_folder(path_to_folder=Path('data'), path_to_input_folder=Path('data/input'))
+add_tasks_to_users(attempts_per_user=3)
 
 
 server = Flask(__name__)
@@ -64,13 +77,7 @@ if __name__ == '__main__':
     # register_user(username='user1', passwrod='123')
     
     # drop_redis() 
-    drop_db()
-    init_db()
-    register_admin()
-    register_users_from_csv('users.csv')
-    start_sessions()
-    make_tasks_from_folder(path_to_folder=Path('data'), path_to_input_folder=Path('data/input'))
-    add_tasks_to_users(attempts_per_user=3)
+    
     
     auth = dash_auth.BasicAuth(
                                 app,

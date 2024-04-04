@@ -1,3 +1,4 @@
+import logging
 import plotly.express as px
 from dash import Dash, dcc, html, Input, Output, no_update, callback, State, ctx
 import dash_bootstrap_components as dbc
@@ -72,7 +73,14 @@ def layout(username:  str):
     cfg = config
     cfg['scrollZoom'] = wheel_zoom
     # print(f'opacity = {fill_opacity}')
-    
+    # logging.info(f'LAST FIGURE IS NONE ={figure_table.get_last_figure(username=username) is None} FROM USER = {username}')
+    last_figure = figure_table.get_last_figure(username=username)
+    n_marked_segments = 0
+    if last_figure is None:
+        last_figure = get_figure(default_figure)
+    else:    
+        marker_class_1 = figure_table.get_marker_class_1(username=username)
+        if marker_class_1 is not None:  n_marked_segments = len(marker_class_1)
     row1 = dbc.Row([
         dbc.Col(
             [
@@ -119,7 +127,7 @@ def layout(username:  str):
         
         dbc.Col([
             html.B(children="Marked segments: "),
-            html.Span(children='0', id="text-marked-segments"), #html.Br(),
+            html.Span(children=n_marked_segments, id="text-marked-segments"), #html.Br(),
         ], width=4, style={'font-size': '20px'}),
         
         dbc.Col([
@@ -139,7 +147,7 @@ def layout(username:  str):
             ]),
         
             html.Center(id="container-img", children=[   #style={'widhth': '800px', 'height': 'auto'},
-                dcc.Graph(id="graph-pic", figure=get_figure(default_figure), config=cfg),
+                dcc.Graph(id="graph-pic", figure=last_figure, config=cfg),
                 html.Div(
                     style={'justify-content': 'center'},
                     children=[
@@ -352,7 +360,7 @@ def show_preview(n_clicks1, n_clicks2, username):
     Output('text-marked-segments', 'children'),
     Input("graph-pic", "relayoutData"),
     State("graph-pic", "figure"),
-    # prevent_initial_call=True
+    prevent_initial_call=True
     
 )
 def on_new_annotation(relayout_data, figure, allow_duplicate=True):
@@ -375,13 +383,13 @@ def on_new_annotation(relayout_data, figure, allow_duplicate=True):
         # print(f"new shape!!!!!! = {last_figure['layout']['newshape']}")
     is_started_annotation = session_table.is_start_annotation(username=username)
     
-    # print(f'is_loaded_image = {is_loaded_image}; last_figure is None = {last_figure is None}') 
+    logging.info(f'is_loaded_image = {is_loaded_image}; last_figure is None = {last_figure is None}') 
     if ctx.triggered_id is None:
-        # print(f'CTX IS NONE!')
+        logging.info(f'CTX IS NONE!')
         if not is_loaded_image:
             return get_figure(default_figure), 0
         if last_figure is not None:
-            # print('HERE!!!')
+            logging.info('HERE!!!')
             return last_figure, 0
         if last_figure is None and is_loaded_image:
             img = image_table.get_image(username)
@@ -389,11 +397,11 @@ def on_new_annotation(relayout_data, figure, allow_duplicate=True):
             fig = get_zoomed_figure(img, json_data, NEWSHAPE)
             figure_table.save_marker_class_1(username, [])
             return fig, 0
-        # print('Situation unexpected.')
+        logging.info('Situation unexpected.')
         return get_figure(default_figure), 0
     
     if relayout_data is not None and is_loaded_image:
-        # print('RELAYOUT DATA IS NOT NONE')
+        logging.info('RELAYOUT DATA IS NOT NONE')
         resize_arr = [key for key in relayout_data.keys() if '.path' in key]
         if len(resize_arr) != 0:
             for el in resize_arr:
@@ -404,7 +412,7 @@ def on_new_annotation(relayout_data, figure, allow_duplicate=True):
                 figure_table.save_marker_class_1(username, markers_class_1)
                 figure_table.save_last_figure(username, figure)
         elif "shapes" in relayout_data:
-            # print('SHAPES IS NOT NONE SAVE FIGURE AND CLASS 1')
+            logging.info('SHAPES IS NOT NONE SAVE FIGURE AND CLASS 1')
             if not is_started_annotation:
                 session_table.update_start_annotation(username, True)
             figure_table.save_last_figure(username, figure)
@@ -423,7 +431,7 @@ def on_new_annotation(relayout_data, figure, allow_duplicate=True):
     last_figure = figure_table.get_last_figure(username)
     figure_to_return = figure
     if last_figure is None:
-        # print(f'LAST FIGURE IS NONE')
+        logging.info(f'LAST FIGURE IS NONE')
         if is_loaded_image:
             json_data = figure_table.get_json_data(username)
             figure_to_return = get_zoomed_figure(img, json_data, NEWSHAPE)
@@ -437,7 +445,7 @@ def on_new_annotation(relayout_data, figure, allow_duplicate=True):
     
     
 
-    # print(f'show polygon  = {session_table.get_show_polygons(username)}')
+    logging.info(f'show polygon  = {session_table.get_show_polygons(username)}')
     if session_table.get_show_polygons(username) and last_figure is not None:
         fill_opacity = session_table.get_fill_opacity(username)
         figure_to_return = draw_polygons_on_last_figure(figure_to_return, img, markers_class_1, reverse=__get_reverse(), alpha=fill_opacity) 
