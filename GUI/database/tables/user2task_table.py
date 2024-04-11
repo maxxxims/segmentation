@@ -109,3 +109,22 @@ def get_metric(uuid: UUID):
         with conn.begin():
             res = conn.execute(select(User2Task.metric).where(User2Task.uuid == uuid)).first()
     return res.metric
+
+
+def set_pixels_numbers(uuid: UUID, pixels_class_1: int, pixels_class_0: int):
+    with engine.connect() as conn:
+        with conn.begin():
+            conn.execute(update(User2Task).values(pixels_class_1=pixels_class_1, pixels_class_0=pixels_class_0).where(User2Task.uuid == uuid))
+            
+            
+def get_pixels_numbers(uuid: UUID) -> tuple:
+    """
+    return (pixels_class_1, pixels_class_0)
+    """
+    with engine.connect() as conn:
+        with conn.begin():
+            res = conn.execute(select(User2Task.pixels_class_1, User2Task.pixels_class_0).where(User2Task.uuid == uuid)).first  ()
+    print(f'RES = {res}')
+    if res is None:
+        return 0, 0
+    return res.pixels_class_1, res.pixels_class_0

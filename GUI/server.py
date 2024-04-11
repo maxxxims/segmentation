@@ -25,10 +25,10 @@ add_tasks_to_users(attempts_per_user=3)
 
 server = Flask(__name__)
 app = Dash(__name__, use_pages=True, server=server, url_base_pathname='/',
-           external_stylesheets=[dbc.themes.BOOTSTRAP],)
-# app.css.append_css(
-#     {'external_url': 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css'}
-# )
+           external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
+app.css.append_css(
+    {'external_url': 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css'}
+)
 
 button_styles = {'margin-left': '40px', 'width': '10%', 'height': 'auto'}
 BTN_COLOR = 'info'
@@ -69,14 +69,18 @@ if __name__ == '__main__':
     # for el in result:
     #     print(el)
     
+    server.secret_key = 'super secret key'
+    #server.config['SESSION_TYPE'] = 'filesystem'
     
-    # drop_redis() 
+    drop_redis() 
     # drop_db()
     # init_db()
-    #register_user(username='admin', passwrod='admin')
-    # register_user(username='user1', passwrod='123')
     
-    # drop_redis() 
+    # register_admin()
+    # register_users_from_csv('users.csv')
+    # start_sessions()
+    # make_tasks_from_folder(path_to_folder=Path('data'), path_to_input_folder=Path('data/input'))
+    # add_tasks_to_users(attempts_per_user=3)
     
     
     auth = dash_auth.BasicAuth(

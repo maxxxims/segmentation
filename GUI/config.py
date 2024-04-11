@@ -4,6 +4,12 @@ load_dotenv()
 
 
 class Config:
+    line_width      = 1.8
+    fill_opacity    = 0.85
+    line_opacity    = 0.33
+    zoom_value      = 0.95
+    wheel_zoom      = False
+    opened_settings = True
     @classmethod
     def get_gui_host(cls):
         return os.getenv('GUI_HOST')

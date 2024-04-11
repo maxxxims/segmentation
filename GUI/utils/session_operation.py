@@ -1,5 +1,14 @@
 from uuid import UUID
 from ..database import session_table, user2task_table, figure_table, image_table
+import numpy as np
+
+
+def set_gt_image_info(json_data: dict, username: str):
+    annotatated_path = json_data['annotatated_path']
+    gt_image = np.load(annotatated_path)
+    class_0 = int(np.sum(gt_image == 0))
+    class_1 = int(np.sum(gt_image > 0))
+    figure_table.set_pixels_numbers(username, pixels_class_1=class_1, pixels_class_0=class_0)
 
 
 def __clear_task(curent_task_uuid: UUID, username: str):
@@ -41,5 +50,6 @@ def update_current_task(username: str, task_uuid: UUID, img: list, json_data: di
     user2task_table.update_choosen_task(uuid=task_uuid, is_choosen=True)
     # print('task finished 2')
     image_table.save_image(username, img)
+    set_gt_image_info(json_data, username=username)
     figure_table.save_json_data(username=username, json_data=json_data)
     session_table.update_loaded_image(username=username, loaded_image=True)

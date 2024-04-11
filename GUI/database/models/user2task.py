@@ -15,3 +15,7 @@ class User2Task(Base):
     is_choosen: Mapped[bool] = mapped_column(default=False)
     metric: Mapped[float] = mapped_column(default=None, nullable=True)
     save_folder: Mapped[str] = mapped_column(default=None, nullable=True)
+    
+    pixels_class_1: Mapped[int] = mapped_column(default=None, nullable=True)
+    pixels_class_0: Mapped[int] = mapped_column(default=None, nullable=True)
+    

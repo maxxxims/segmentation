@@ -4,6 +4,7 @@ from ..db import Base
 from uuid import uuid4, UUID
 from datetime import datetime as dt
 import datetime
+from GUI.config import Config
 
 
 def get_current_time() -> str:
@@ -24,12 +25,12 @@ class Session(Base):
     show_polygons:    Mapped[bool] = mapped_column(default=True)
     save_path:        Mapped[str] = mapped_column(default=None, nullable=True)
     
-    line_width:       Mapped[int] = mapped_column(default=2.15)
-    fill_opacity:     Mapped[float] = mapped_column(default=0.85)
-    line_opacity:     Mapped[float] = mapped_column(default=0.4)
-    zoom_value:       Mapped[float] = mapped_column(default=0.9)
-    wheel_zoom:       Mapped[bool]  = mapped_column(default=False)
-    opened_settings:  Mapped[bool]  = mapped_column(default=True)
+    line_width:       Mapped[int]   = mapped_column(default=Config.line_width)
+    fill_opacity:     Mapped[float] = mapped_column(default=Config.fill_opacity)
+    line_opacity:     Mapped[float] = mapped_column(default=Config.line_opacity)
+    zoom_value:       Mapped[float] = mapped_column(default=Config.zoom_value)
+    wheel_zoom:       Mapped[bool]  = mapped_column(default=Config.wheel_zoom)
+    opened_settings:  Mapped[bool]  = mapped_column(default=Config.opened_settings)
     
     last_activity:    Mapped[datetime.datetime] = mapped_column(onupdate=get_current_time,
                                                                 default=get_current_time)

@@ -127,7 +127,10 @@ def choose_task(task_uuid: str, username: str):
         new_task = user2task_table.get_task_by_uuid(task_uuid) #task_table.get_task_by_id(task_id)
         with open(new_task.path_to_json, 'r') as file:
             json_data = json.load(file)
-        img = np.load(new_task.path_to_image)
+        _img = np.load(new_task.path_to_image)
+        img = np.zeros((*_img.shape, 3), dtype=np.uint8)
+        for i in range(3):
+            img[:, :, i] = _img
         update_current_task(username=username, task_uuid=task_uuid, img=img, json_data=json_data)
     
     if session_table.is_loaded_image(username):

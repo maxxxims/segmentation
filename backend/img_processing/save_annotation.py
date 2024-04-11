@@ -16,6 +16,8 @@ N_POINTS = int(1e3)
 
 MASK_VALUE = 255
 
+MASK_VALUE_CLASS_1 = 255
+MASK_VALUE_CLASS_0 = 128
 
 
 def parse_path_to_save(path_to_save: Path, file_name: str) -> Path:
@@ -106,8 +108,8 @@ def save_annotation(annotated_image: np.ndarray, data: dict,  data_json: dict, p
     json_save_path = path_to_result_folder / 'result.json'
 
     
-    y_1_class, x_1_class = np.where(annotated_image > 0)
-    y_0_class, x_0_class = np.where(annotated_image == 0)
+    y_1_class, x_1_class = np.where(annotated_image  == 255)
+    y_0_class, x_0_class = np.where(annotated_image == 128)
     
     shape0, shape1 = annotated_image.shape[0], annotated_image.shape[1]
 
@@ -205,21 +207,42 @@ def OLD_check_annotation(data: dict, selected_color: int, save_acc: bool = False
 
 
 
+# def check_annotation(data: dict, _annotated_image: np.ndarray):
+#     """ WORK ONLY TO FULL ANNOTATED IMAGE!!!
+#     :param data: json file with annotation to download file
+#     :param annotated_image: annotated image
+#     """
+#     ground_truth_path = Path(data["annotatated_path"])
+#     ground_truth_img = Image(data=np.load(ground_truth_path))
+#     ground_truth_img.data[ground_truth_img.data > 0] = 1
+    
+#     annotated_image = np.zeros_like(_annotated_image)
+    
+    
+#     annotated_image[annotated_image > 0] = 1
+#     acc = Evaluator.evaluate(ground_truth_img, Image(data=annotated_image), [], None, Accuracy)
+#     diffrence = np.zeros_like(annotated_image)
+#     diffrence[annotated_image != ground_truth_img.data] = 1
+#     # plt.imsave('diffrence.png', diffrence, cmap='gray')
+#     # plt.imsave('annotated.png', annotated_image, cmap='gray')
+#     # plt.imsave('ground_truth.png', ground_truth_img.data, cmap='gray')
+#     # print(f'MY CALCT ACC = {np.sum(diffrence == 0) / diffrence.size}; size = {diffrence.size}')
+    
+#     return acc['Accuracy'], ground_truth_img
+
+
 def check_annotation(data: dict, annotated_image: np.ndarray):
-    """
-    :param data: json file with annotation to download file
-    :param annotated_image: annotated image
-    """
     ground_truth_path = Path(data["annotatated_path"])
     ground_truth_img = Image(data=np.load(ground_truth_path))
     ground_truth_img.data[ground_truth_img.data > 0] = 1
-    annotated_image[annotated_image > 0] = 1
-    acc = Evaluator.evaluate(ground_truth_img, Image(data=annotated_image), [], None, Accuracy)
-    diffrence = np.zeros_like(annotated_image)
-    diffrence[annotated_image != ground_truth_img.data] = 1
-    # plt.imsave('diffrence.png', diffrence, cmap='gray')
-    # plt.imsave('annotated.png', annotated_image, cmap='gray')
-    # plt.imsave('ground_truth.png', ground_truth_img.data, cmap='gray')
-    # print(f'MY CALCT ACC = {np.sum(diffrence == 0) / diffrence.size}; size = {diffrence.size}')
     
-    return acc['Accuracy'], ground_truth_img
+    annotated_area = annotated_image != 0
+    
+    gt_data = ground_truth_img.data[annotated_area]
+    annotated_data = annotated_image[annotated_area]
+    assert np.sum(annotated_data == 0) == 0, 'Something wrong with annotating process!!!'
+    annotated_data[annotated_data == 255] = 1
+    annotated_data[annotated_data == 128] = 0
+    
+    acc = np.sum(gt_data == annotated_data) / gt_data.size
+    return acc

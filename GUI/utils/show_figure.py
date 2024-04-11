@@ -1,6 +1,6 @@
 import plotly.express as px
 import numpy as np
-from backend import draw_annotations
+from backend import draw_annotations, get_weight_image
 import plotly.graph_objects as go
 
 
@@ -44,15 +44,14 @@ def zoom_figure(fig: dict, zoom_value: float, json_data: dict) -> dict:
     return figure.to_dict()
     
 
-def get_filled_figure(full_image: np.ndarray, json_data: dict, marker_class_1: list, reverse: bool):
-    img_add, img = draw_annotations(full_image,marker_class_1, reverse=reverse)
+def get_filled_figure(full_image: np.ndarray, json_data: dict, marker_class_1: list):
+    img_add = draw_annotations(full_image,marker_class_1)
+    img_add = get_weight_image(img_add, full_image)
     print(f'INPUT IMAGE SHAPE = {full_image.shape}; IMG ADD SHAPE = {img_add.shape}')
     data = json_data['small_image']['relative']
     h0, w0 = data['h0'], data['w0']
     h, w = h0 + data['h'], w0 + data['w']
-    stencil = 255 * np.ones_like(img_add, dtype=np.uint8)
-    for i in range(3):
-        stencil[:, :, i] = full_image
+    stencil = np.copy(full_image)
     stencil[h0:h, w0:w] = img_add[h0:h, w0:w]
     fig = px.imshow(stencil, binary_string=True, height=800)   
     return fig

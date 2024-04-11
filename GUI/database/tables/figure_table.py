@@ -37,3 +37,23 @@ def save_json_data(username: str, json_data: dict):
 
 def get_json_data(username: str) -> dict:
     return __redis_get(f'json_data_{username}')
+
+
+def get_shapes_hashes(username: str) -> dict:
+    return __redis_get(f'shapes_hashes_{username}')
+    
+def set_shapes_hashes(username: str, hashes: dict):
+    redis.set(f'shapes_hashes_{username}', json.dumps(hashes))
+    
+    
+def delete_shapes_hashes(username: str):
+    redis.delete(f'shapes_hashes_{username}')
+    
+    
+def set_pixels_numbers(username: str, pixels_class_1: int, pixels_class_0: int):
+    redis.set(f'pixels_numbers_{username}', json.dumps({'class_1': pixels_class_1, 'class_0': pixels_class_0}))
+    
+def get_pixels_numbers(username: str) -> list:
+    res = __redis_get(f'pixels_numbers_{username}')
+    if res is None: return 0, 0
+    else:   return res['class_1'], res['class_0']
