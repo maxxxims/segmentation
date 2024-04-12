@@ -14,17 +14,17 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 
-drop_db()
-init_db()
-register_admin()
-register_users_from_csv('users.csv')
-start_sessions()
-make_tasks_from_folder(path_to_folder=Path('data'), path_to_input_folder=Path('data/input'))
-add_tasks_to_users(attempts_per_user=3)
+# drop_db()
+# init_db()
+# register_admin()
+# register_users_from_csv('users.csv')
+# start_sessions()
+# make_tasks_from_folder(path_to_folder=Path('data'), path_to_input_folder=Path('data/input'))
+# add_tasks_to_users(attempts_per_user=3)
 
 
 server = Flask(__name__)
-app = Dash(__name__, use_pages=True, server=server, url_base_pathname='/',
+app = Dash(__name__, use_pages=True, server=server, url_base_pathname='/v2/',
            external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
 app.css.append_css(
     {'external_url': 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css'}
@@ -46,9 +46,9 @@ app.layout = html.Div([
     navbar,
     dbc.Navbar(id='navigate-bar', children=[
         dbc.Button(style=button_styles, color=BTN_COLOR, children='Tutorial', href=Config.get_tutorial_url(), outline=outline),
-        dbc.Button(style=button_styles, color=BTN_COLOR, children='Select File', href='/choose_file', outline=outline),
-        dbc.Button(style=button_styles, color=BTN_COLOR, children='Annotation', href='/annotation', outline=outline),
-        dbc.Button(style=button_styles, color=BTN_COLOR, children='Save file', href='/annotation_background', outline=outline),
+        dbc.Button(style=button_styles, color=BTN_COLOR, children='Select File', href='choose_file', outline=outline),
+        dbc.Button(style=button_styles, color=BTN_COLOR, children='Annotation', href='annotation', outline=outline),
+        dbc.Button(style=button_styles, color=BTN_COLOR, children='Save file', href='annotation_background', outline=outline),
 
     ], style={'display': 'flex', 'justify-content': 'center', 'margin-bottom': '5px'}, color=NAVBAR_COLOR),
     dash.page_container
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     server.secret_key = 'super secret key'
     #server.config['SESSION_TYPE'] = 'filesystem'
     
-    drop_redis() 
+    # drop_redis() 
     # drop_db()
     # init_db()
     

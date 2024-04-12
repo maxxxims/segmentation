@@ -172,3 +172,20 @@ def draw_annotated_image(_img: np.ndarray, data: dict, json_data: dict) -> np.nd
     print(f'CUTTED IMG SIZE = {annotated_img.shape}')
     
     return annotated_img
+
+
+
+def fill_image_by_mask(original_image: np.ndarray, mask: np.array, alpha: float = 0.8):
+    #new_image = np.stack([original_image, original_image, original_image], axis=2)
+    new_image = np.zeros((*original_image.shape, 3), dtype=np.uint8)
+    mask_corrected = np.reshape(mask, (original_image.shape[0], original_image.shape[1]))
+    for i in range(3):
+        #new_image[:, :, i][~mask_corrected] = ANNOTATION_COLOR_CLASS_0[i]
+        new_image[:, :, i][mask_corrected]  = ANNOTATION_COLOR_CLASS_1[i]
+    
+    _original_image = np.stack([original_image, original_image, original_image], axis=2)
+    
+    beta = 1-alpha
+    gamma = 1
+    img_add = cv2.addWeighted(_original_image, alpha, new_image, beta, gamma)
+    return img_add

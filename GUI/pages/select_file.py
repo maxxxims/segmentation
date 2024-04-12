@@ -152,8 +152,8 @@ def select_task_from_table(active_cell, username):
         user_tasks = user2task_table.get_all_tasks(username)
         task_uuid = str(user_tasks[active_cell['row']].uuid)
         current_task_uuid = str(user2task_table.get_current_task_uuid(username=username))
-        if current_task_uuid == task_uuid:
-            return no_update
+        # if current_task_uuid == task_uuid:
+        #     return no_update
         return choose_task(task_uuid)
     else:
         return no_update
