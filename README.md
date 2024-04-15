@@ -1,5 +1,5 @@
 # Segmentation
-This repository contains an image annotation tools for segmentation and a segmentation framework based on classical machine learning methods.
+This repository contains image annotation tools for segmentation and a segmentation framework based on classical machine learning methods.
 
 An example of annotation web-application can be found at the link: http://193.233.20.41:8050/v2/
 
@@ -30,6 +30,10 @@ An example of annotation web-application can be found at the link: http://193.23
 The application will be available at the default url 
 `http://127.0.0.1:8050/v2/ `<br> Detailed information about the functionality can be found on the  <a href="http://162.248.227.166:8060/tutorial2">tutorial </a> page (http://162.248.227.166:8060/tutorial2)
 
+
+If you run locally, a default profile is available to you:
+><b>login:</b> local<br>
+<b>password:</b> 123
 ##
 
 #### Additional help: close docker & use venv
