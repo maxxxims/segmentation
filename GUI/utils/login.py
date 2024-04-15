@@ -37,7 +37,7 @@ def register_local_user(username: str = 'local', password: str = '123'):
 def register_users_from_csv(path_to_csv):
     if isinstance(path_to_csv, str):
         path_to_csv = Path(path_to_csv)
-    if not not path_to_csv.exists():
+    if not path_to_csv.exists():
         return
     df = pd.read_csv(path_to_csv, na_values='None', sep=';')
     for index, row in df.iterrows():
