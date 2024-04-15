@@ -1,12 +1,13 @@
-### Segmentation
+# Segmentation
 This repository contains an image annotation tools for segmentation and a segmentation framework based on classical machine learning methods.
 
 An example of annotation web-application can be found at the link: http://193.233.20.41:8050/v2/
 
 
 
-<u>Login details: </u><br><b>login</b> - tester, <b>password</b> - 321
-### Run application for image annotation (2 variants):
+<u> Login details</u>:<br>
+<b>login</b> - tester, <b>password</b> - 321
+### Run application for image annotation locally (2 variants):
 #
    1) Variant 1 using docker
 ```
