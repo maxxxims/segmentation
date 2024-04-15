@@ -6,8 +6,9 @@ An example of annotation web-application can be found at the link: http://193.23
 
 
 ### Login details:
-<b>login:</b> tester,<br>
+><b>login:</b> tester<br>
 <b>password:</b> 321
+
 ### Run application for image annotation locally (2 variants):
 #
    1) Variant 1 using docker
