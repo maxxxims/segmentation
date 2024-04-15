@@ -1,3 +1,4 @@
+from pathlib import Path
 from ..database import user_table, session_table
 from flask import request
 import pandas as pd
@@ -30,7 +31,14 @@ def login_required(func: callable):
 def register_admin():
     user_table.add_user(username='admin', password=Config.get_admin_password())
 
+def register_local_user(username: str = 'local', password: str = '123'):
+    user_table.add_user(username=username, password=password)
+
 def register_users_from_csv(path_to_csv):
+    if isinstance(path_to_csv, str):
+        path_to_csv = Path(path_to_csv)
+    if not not path_to_csv.exists():
+        return
     df = pd.read_csv(path_to_csv, na_values='None', sep=';')
     for index, row in df.iterrows():
         name = row['name'] if pd.notna(row['name']) else None

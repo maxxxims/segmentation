@@ -3,8 +3,8 @@ import dash
 from dash import Dash, html, dcc, Output, Input
 from flask import redirect, Flask, render_template
 from .database.db import init_db, drop_db, drop_redis
-from .database import user_table, session_table, task_table, user2task_table
-from .utils import get_users, add_tasks_to_users, register_user, make_tasks_from_folder, register_users_from_csv, register_admin, start_sessions
+from .utils import get_users, add_tasks_to_users, register_user, make_tasks_from_folder,\
+    register_users_from_csv, register_admin, start_sessions, register_local_user
 import dash_auth
 from .config import Config
 import dash_bootstrap_components as dbc
@@ -12,16 +12,6 @@ import logging
 
 
 logging.basicConfig(level=logging.INFO)
-
-
-# drop_db()
-# init_db()
-# register_admin()
-# register_users_from_csv('users.csv')
-# start_sessions()
-# make_tasks_from_folder(path_to_folder=Path('data'), path_to_input_folder=Path('data/input'))
-# add_tasks_to_users(attempts_per_user=3)
-
 
 server = Flask(__name__)
 app = Dash(__name__, use_pages=True, server=server, url_base_pathname='/v2/',
@@ -56,26 +46,12 @@ app.layout = html.Div([
 
 
 if __name__ == '__main__':
-    print('Application is available at http://127.0.0.1:8050/')
-    # from GUI.database.db import engine
-    # from GUI.database.models import User2Task, Task
-    # from sqlalchemy import select, update
-    # from uuid import UUID
-    # with engine.begin() as conn:
-    #     # result = conn.execute(select(User2Task, Task).join(Task, Task.id == User2Task.task_id).having(User2Task.uuid == uuid)).all()
-    #     conn.execute(update(User2Task).where(User2Task.uuid == UUID('5d5ae7c9-beee-4ffe-8d2f-bba2a7c33c23')).values(is_choosen=False))
-    #     result = conn.execute(select(User2Task, Task).join(Task, Task.id == User2Task.task_id).where(User2Task.uuid == UUID('5d5ae7c9-beee-4ffe-8d2f-bba2a7c33c23'))).all()
-        
-    # for el in result:
-    #     print(el)
-    
     server.secret_key = 'super secret key'
-    #server.config['SESSION_TYPE'] = 'filesystem'
-    
-    # drop_redis() 
-    # drop_db()
+    # drop_redis()
+    # drop_db() 
     # init_db()
-    
+
+    # register_local_user(username='local', password='123')
     # register_admin()
     # register_users_from_csv('users.csv')
     # start_sessions()
@@ -89,4 +65,5 @@ if __name__ == '__main__':
                                 )
     HOST = Config.get_gui_host()
     PORT = Config.get_gui_port()
+    print(f'Application is available at http://127.0.0.1:{PORT}/')
     app.run(host=HOST, port=PORT, debug=True)

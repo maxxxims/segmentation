@@ -1,3 +1,4 @@
+from pathlib import Path
 from uuid import UUID
 from dash import Dash, dcc, html, Input, Output, State, callback, no_update, dash_table, ctx
 import dash
@@ -125,7 +126,8 @@ def choose_task(task_uuid: str, username: str):
     if task_uuid is not None and ctx.triggered_id is not None:
         task_uuid = UUID(task_uuid)
         new_task = user2task_table.get_task_by_uuid(task_uuid) #task_table.get_task_by_id(task_id)
-        with open(new_task.path_to_json, 'r') as file:
+        path_to_json = Path(str(new_task.path_to_json).replace('\\', '/'))
+        with open(path_to_json, 'r') as file:
             json_data = json.load(file)
         _img = np.load(new_task.path_to_image)
         img = np.zeros((*_img.shape, 3), dtype=np.uint8)

@@ -27,7 +27,10 @@ def init_db():
 
 
 def drop_db():
-    Base.metadata.drop_all(engine)
+    try:
+        Base.metadata.drop_all(engine)
+    except:
+        pass
 
 
 def drop_redis():
