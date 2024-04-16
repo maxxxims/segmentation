@@ -46,4 +46,4 @@ If you run locally, a default profile is available to you:
 #
 #
 
-![example](https://github.com/maxxxims/segmentation/blob/main/GUI/static/step2.png)
+![example](https://github.com/maxxxims/segmentation/blob/main/GUI/static/example.png)
