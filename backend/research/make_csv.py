@@ -2,13 +2,17 @@ import pandas as pd
 from pathlib import Path
 import os
 import numpy as np
+from tqdm import tqdm
 from backend import Evaluator, Accuracy, F1_binary, EPorosity, MarkerContainer,\
     IoU_pores, BaseMetric, Image, MarkerByPoints2D, MarkerBorder2D, Segmentation, \
     EvaluatorBorder
 import backend.filters.filters_2dim as filters_2d
 import json
 from sklearn.ensemble import RandomForestClassifier
+import logging
+from pprint import pprint
 
+logging.basicConfig(level=logging.INFO)
 
 PATH_TO_BORDERS = Path('C:/Users/maxxx/VSprojects/back/0/0/border')
 RELATIVE_PATH_TO_GT = r'02. Segmented\00. Original'
@@ -25,26 +29,32 @@ class EvaluateMetrics:
         self.n_diameter = n_diameter
         self.border_metrics = {f'{m.name}_{n_diameter}': m for m in border_metrics}
         self.metrics = {m.name: m for m in metrics}
-        self.names_dict = self.metrics.keys() + self.border_metrics.keys()
+        self.names_dict = list(self.metrics.keys()) + list(self.border_metrics.keys())
         
         
 class MeasurementsData:
-    def __init__(self, path_to_folder: Path, path_to_csv: Path,
-                       path_to_image_folder: Path, metrics: EvaluateMetrics):
-        for path in [path_to_folder, path_to_csv, path_to_image_folder]:
+    def __init__(self, users_data_folder: Path, path_to_csv: Path,
+                       path_to_main_folder: Path, metrics: EvaluateMetrics):
+        """
+        users_data_folder - path to operators folder with annotation attempts
+        path_to_csv - path to csv file
+        path_to_main_folder - path to main folder containing images
+
+        """
+        for path in [users_data_folder, path_to_csv, path_to_main_folder]:
             if isinstance(path, str):
                 path = Path(path)
-            
+        self.n_diameter = metrics.n_diameter
+        self.metrics = metrics
+        self.users_data_folder = users_data_folder
+        self.path_to_csv = path_to_csv
+        self.path_to_main_folder = path_to_main_folder
+          
         if path_to_csv.exists():
             self.df = pd.read_csv(path_to_csv)
         else:
             self.df = self.__make_df(metrics)
-
-        self.n_diameter = metrics.n_diameter
-        self.metrics = metrics
-        self.path_to_folder = path_to_folder
-        self.path_to_csv = path_to_csv
-        self.path_to_image_folder = path_to_image_folder
+            self.save_df()  
         self.__parse_operator_folders()
         self.__validate_input_data()
         
@@ -55,15 +65,19 @@ class MeasurementsData:
     def __parse_operator_folders(self):
         self.operator2part = {}
         self.parts = []
-        for operator_folder in self.path_to_folder.iterdir():
+        for operator_folder in self.users_data_folder.iterdir():
             if operator_folder.is_dir():
                 self.operator2part[operator_folder.name] = [f_name.name for f_name in operator_folder.iterdir() if f_name.is_dir()]
-                self.parts.append(el for el in self.operator2part[operator_folder.name])
+                self.parts += [el for el in self.operator2part[operator_folder.name]]
         self.operators = list(self.operator2part.keys())
         self.parts = list(set(self.parts))
+        # pprint(self.operator2part)
+        # pprint(self.parts)
     def __validate_input_data(self):
         for operator in self.operators:
-            assert np.equal(self.parts == self.operator2part[operator])
+            if not set(self.parts) == set(self.operator2part[operator]):
+                logging.error(f'operator: {operator} has different parts')
+
     
     def save_df(self):
         self.df.to_csv(self.path_to_csv, index=False)
@@ -72,16 +86,16 @@ class MeasurementsData:
         data = metrics.copy()
         data['Operator'] = operator
         data['Parts'] = part
-        self.df = pd.concat([self.df, pd.DataFrame(data)], ignore_index=True)
+        self.df = pd.concat([self.df, pd.DataFrame([data])], ignore_index=True)
         self.save_df()
     
     def process_one_part(self, operator: str, part: str, show: bool = False):
-        folder = self.path_to_folder / operator / part
+        folder = self.users_data_folder / operator / part
         with open(folder / 'result.json', 'r') as f:
             result = json.load(f)
         img_folder = Path(result['folder_path'])
         img_name = result['image_name']
-        abs_img_folder = self.path_to_image_folder / img_folder
+        abs_img_folder = self.path_to_main_folder / img_folder
         original_img_path = abs_img_folder / result['relative_image_path'] / img_name
         gt_img_path = abs_img_folder / RELATIVE_PATH_TO_GT / img_name
         border_img_path = IMGTAG2BORDER[result['image_tag']]
@@ -90,10 +104,11 @@ class MeasurementsData:
         gt_image = Image(path_to_image=gt_img_path)
         
         border_marker = MarkerBorder2D(Image(path_to_image=border_img_path))
-        marker_class1 = MarkerByPoints2D(x_indexes=np.array(result['x_1_class'])+ result['width0'], 
-                                        y_indexes=np.array(result['y_1_class'])+ result['height0'], value=1)
-        marker_class0 = MarkerByPoints2D(x_indexes=np.array(result['x_0_class'])+ result['width0'], 
-                                        y_indexes=np.array(result['y_0_class'])+ result['height0'], value=0)
+        abs_position = result['small_image']['absolute']
+        marker_class1 = MarkerByPoints2D(x_indexes=np.array(result['x_1_class'])+ abs_position['w0'], 
+                                        y_indexes=np.array(result['y_1_class'])+ abs_position['h0'], value=1)
+        marker_class0 = MarkerByPoints2D(x_indexes=np.array(result['x_0_class'])+ abs_position['w0'], 
+                                        y_indexes=np.array(result['y_0_class'])+ abs_position['h0'], value=0)
 
         markers = MarkerContainer([marker_class1, marker_class0])
         
@@ -130,5 +145,53 @@ class MeasurementsData:
         res2 = EvaluatorBorder.evaluate(self.n_diameter, segmented, gt_image, markers, border_marker, *border_metrics)
         for key, value in res2.items():
             res[f'{key}_{self.n_diameter}'] = value
-            
         self.update_df(operator, part, res)
+
+    def process_operator_folder(self, operator: str):
+        for part in tqdm(self.operator2part[operator]):
+            self.process_one_part(operator, part)
+
+    def process_operators_data(self):
+        for operator in tqdm(self.operators):
+            self.parse_operator_folder(operator)
+
+
+    def delete_attempt_from_parts_names(self, part_col: str = 'Parts'):
+        self.df[part_col] = self.df[part_col].apply(lambda x: '_'.join(x.split('_')[:-1]))
+        self.save_df()
+
+    def convert_to_csv(self, save_path: Path, metric_col: str, operator_col: str = 'Operator', part_col: str = 'Parts'):
+        assert metric_col in self.df.columns, f'Unknown metric {metric_col}; available: {self.df.columns}'
+        # result = pd.DataFrame([], columns=['Operator', 'Parts', 'attempt_1', 'attempt_2', 'attempt_3'])
+        print(len(self.df[part_col].unique()), len(self.df[self.df[operator_col] == self.operators[0]]))
+        if len(self.df[part_col].unique()) == len(self.df[self.df[operator_col] == self.operators[0]]):
+            self.delete_attempt_from_parts_names(part_col)
+            logging.info('Deleted attempt from part names')
+
+        attempts_numbers = []
+        table = []
+        for operator in self.df[operator_col].unique():
+            for part in self.df[part_col].unique():
+                _data = self.df[(self.df[operator_col] == operator) & (self.df[part_col] == part)][metric_col].values
+                print(f'_data = {_data}')
+                attempts_numbers.append(len(_data))
+                table.append([operator, part] + list(_data))
+        attempts_numbers = list(set(attempts_numbers))
+        assert len(attempts_numbers) == 1, f'Different numbers of attempts; attempts_numbers = {attempts_numbers}'
+        result = pd.DataFrame(table, columns=[operator_col, part_col] + [f'attempt_{i+1}' for i in range(attempts_numbers[0])])
+
+        result.to_csv(save_path, index=False)
+
+
+if __name__ == '__main__':
+    main_folder = Path('..')
+    users_folder = Path('../msa/exp/1')
+    csv_path = Path('backend/research/exp.csv')
+    metrics = EvaluateMetrics(metrics=[EPorosity, IoU_pores], border_metrics=[F1_binary, IoU_pores], n_diameter=7)
+    data = MeasurementsData(
+        users_folder, csv_path, main_folder, metrics
+    )
+    # data.process_operator_folder('user11')
+    #data.process_one_part('user11', 'img0_300_1', show=False)
+
+    data.convert_to_csv(Path('backend/research/table.csv'), 'IoU_pores_7')
