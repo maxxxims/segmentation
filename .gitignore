@@ -22,3 +22,4 @@ main.py
 !/data/output/empty
 !.empty
 !GUI/static/*.png
+!backend/research/data/table.csv

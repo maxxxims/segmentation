@@ -167,6 +167,8 @@ class MeasurementsData:
         for key, value in res2.items():
             res[f'{key}_{self.n_diameter}'] = value
         self.update_df(operator, part, res)
+        #segmented.show()
+
 
     def process_operator_folder(self, operator: str):
         for part in tqdm(self.operator2part[operator]):
@@ -174,7 +176,7 @@ class MeasurementsData:
 
     def process_operators_data(self):
         for operator in tqdm(self.operators):
-            self.parse_operator_folder(operator)
+            self.process_operator_folder(operator)
 
 
     def delete_attempt_from_parts_names(self, part_col: str = 'Parts'):
@@ -184,11 +186,13 @@ class MeasurementsData:
     def convert_to_csv(self, save_path: Path, metric_col: str, operator_col: str = 'Operator', part_col: str = 'Parts'):
         assert metric_col in self.df.columns, f'Unknown metric {metric_col}; available: {self.df.columns}'
         # result = pd.DataFrame([], columns=['Operator', 'Parts', 'attempt_1', 'attempt_2', 'attempt_3'])
-        print(len(self.df[part_col].unique()), len(self.df[self.df[operator_col] == self.operators[0]]))
-        if len(self.df[part_col].unique()) == len(self.df[self.df[operator_col] == self.operators[0]]):
-            self.delete_attempt_from_parts_names(part_col)
-            logging.info('Deleted attempt from part names')
-
+        #print(len(self.df[part_col].unique()), len(self.df[self.df[operator_col] == self.operators[0]]))
+        for operator in self.operators:
+            dt = self.df[self.df[operator_col] == operator]
+            if len(dt[part_col].unique()) == len(dt):
+                self.delete_attempt_from_parts_names(part_col)
+                logging.info('Deleted attempt from part names')
+                break
         attempts_numbers = []
         table = []
         for operator in self.df[operator_col].unique():
@@ -202,17 +206,27 @@ class MeasurementsData:
         result = pd.DataFrame(table, columns=[operator_col, part_col] + [f'attempt_{i+1}' for i in range(attempts_numbers[0])])
 
         result.to_csv(save_path, index=False)
+        return result
 
 
 if __name__ == '__main__':
     main_folder = Path('..')
-    users_folder = Path('../msa/exp/1')
-    csv_path = Path('backend/research/experiments.csv')
+    users_folder1 = Path('../msa/exp/1')
+
+    csv_path1 = Path('backend/research/exp.csv')
+    csv_path2 = Path('backend/research/exp2.csv')
+    users_folder2 = Path('../msa/exp/2')
+
     metrics = EvaluateMetrics(metrics=[EPorosity, IoU_pores], border_metrics=[F1_binary, IoU_pores], n_diameter=7)
     data = MeasurementsData(
-        users_folder, csv_path, main_folder, metrics
+        users_folder2, csv_path2, main_folder, metrics
     )
-    # data.process_operator_folder('user11')
+    # data.process_one_part('user11', 'img0_300_3', show=False)  
+    # print(data.operators)
+    for operator in tqdm(data.operators):
+        #if operator != 'user11':
+        data.process_operator_folder(operator)  
+
     #data.process_one_part('user11', 'img0_300_1', show=False)
 
-    data.convert_to_csv(Path('backend/research/table.csv'), 'IoU_3')
+    #data.convert_to_csv(Path('backend/research/table.csv'), 'IoU_pores_7')
