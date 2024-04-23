@@ -55,10 +55,31 @@ class MeasurementsData:
         else:
             self.df = self.__make_df(metrics)
             self.save_df()  
-        self.__parse_operator_folders()
-        self.__validate_input_data()
-        
-        
+        self.load_data()
+
+    
+    def load_data(self):
+        try:
+            self.__parse_operator_folders()
+            self.__validate_input_data()
+        except:
+            logging.error(f'Users data is not loaded!')
+            self.__parse_operator_from_csv()
+            
+            
+    def __parse_operator_from_csv(self):
+        self.operator2part = {}
+        self.parts = []
+        part_col = 'Image'
+        for operator in self.df['Operator'].unique():
+            parts = self.df[self.df['Operator'] == operator][part_col].unique().tolist()
+            self.operator2part[operator] = parts
+            self.parts += parts
+        self.operators = list(self.operator2part.keys())
+        self.parts = list(set(self.parts))
+        self.df.rename(columns={part_col: 'Parts'}, inplace=True)
+            
+            
     def __make_df(self, metrics: EvaluateMetrics) -> pd.DataFrame:
         df = pd.DataFrame(columns=['Operator', 'Parts'] + [name for name in metrics.names_dict])
         return df
@@ -186,7 +207,7 @@ class MeasurementsData:
 if __name__ == '__main__':
     main_folder = Path('..')
     users_folder = Path('../msa/exp/1')
-    csv_path = Path('backend/research/exp.csv')
+    csv_path = Path('backend/research/experiments.csv')
     metrics = EvaluateMetrics(metrics=[EPorosity, IoU_pores], border_metrics=[F1_binary, IoU_pores], n_diameter=7)
     data = MeasurementsData(
         users_folder, csv_path, main_folder, metrics
@@ -194,4 +215,4 @@ if __name__ == '__main__':
     # data.process_operator_folder('user11')
     #data.process_one_part('user11', 'img0_300_1', show=False)
 
-    data.convert_to_csv(Path('backend/research/table.csv'), 'IoU_pores_7')
+    data.convert_to_csv(Path('backend/research/table.csv'), 'IoU_3')
